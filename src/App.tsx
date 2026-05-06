@@ -5,6 +5,8 @@ import viteLogo from './assets/vite.svg';
 import './App.css';
 import LoginModal from './components/ui/Modal/LoginModal';
 import ProjectsCarousel from './components/ui/Projects/ProjectsCarousel';
+import LandingPage from './pages/landingPage';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 function App() {
   const [count, setCount] = useState(0);
@@ -12,7 +14,14 @@ function App() {
 
   return (
     <>
+      <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+      </Routes>
+    </BrowserRouter>
+{/*       
       <section id="center">
+        <LandingPage></LandingPage>
         <ProjectsCarousel />
         <button
           type="button"
@@ -137,7 +146,7 @@ function App() {
       </section>
 
       <div className="ticks"></div>
-      <section id="spacer"></section>
+      <section id="spacer"></section> */}
     </>
   );
 }
