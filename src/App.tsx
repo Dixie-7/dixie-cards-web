@@ -1,25 +1,16 @@
-import { useState } from 'react';
-import heroImg from './assets/hero.png';
-import reactLogo from './assets/react.svg';
-import viteLogo from './assets/vite.svg';
 import './App.css';
-import LoginModal from './components/ui/Modal/LoginModal';
-import ProjectsCarousel from './components/ui/Projects/ProjectsCarousel';
-import LandingPage from './pages/landingPage';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
   return (
     <>
       <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-      </Routes>
-    </BrowserRouter>
-{/*       
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+        </Routes>
+      </BrowserRouter>
+      {/*       
       <section id="center">
         <LandingPage></LandingPage>
         <ProjectsCarousel />
