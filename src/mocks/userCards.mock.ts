@@ -1,0 +1,249 @@
+import type { UserCardDto } from '@/types/userCards';
+
+export const userCardsMock: UserCardDto[] = [
+  {
+    id: 0,
+    userId: 7,
+    title: 'MainCard',
+    description:
+      'Desarrollador full stack enfocado en construir productos web claros, editables y preparados para crecer.',
+    template: 'default',
+    styleText: 'ring-1 ring-cyan-500/10',
+    width: 100,
+    sortOrder: 0,
+    blocks: [
+      {
+        id: 1,
+        userCardId: 0,
+        type: 'text',
+        title: 'Maximiliano Lagos',
+        content:
+          'Creo experiencias digitales con React, TypeScript y .NET, cuidando tanto la arquitectura como la forma en que cada pantalla se siente al usarla.',
+        template: 'main-presentation',
+        styleText: 'shadow-lg shadow-cyan-950/10',
+        width: 100,
+        sortOrder: 1,
+      },
+      {
+        id: 2,
+        userCardId: 0,
+        type: 'list',
+        title: 'Foco profesional',
+        content:
+          'Frontend architecture; Portfolio management; API-driven UI; Product workflows',
+        template: 'main-skills',
+        styleText: 'backdrop-blur-sm',
+        width: 30,
+        sortOrder: 2,
+      },
+      {
+        id: 3,
+        userCardId: 0,
+        type: 'media',
+        title: 'Portfolio workspace',
+        mediaUrl:
+          'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80',
+        caption:
+          'Imagen representativa para la presentacion principal del portfolio.',
+        template: 'main-photo',
+        styleText: 'shadow-lg shadow-zinc-950/10',
+        width: 30,
+        sortOrder: 3,
+      },
+    ],
+  },
+  {
+    id: 1,
+    userId: 7,
+    title: 'Frontend Experience',
+    description:
+      'Interfaces cuidadas, componentes reutilizables y flujos pensados para usuarios reales.',
+    template: 'feature',
+    styleText: 'ring-1 ring-cyan-500/10',
+    width: 50,
+    sortOrder: 1,
+    blocks: [
+      {
+        id: 101,
+        userCardId: 1,
+        type: 'text',
+        title: 'Perfil',
+        content:
+          'Desarrollo aplicaciones React con TypeScript, priorizando claridad visual, rendimiento y una arquitectura fácil de mantener.',
+        template: 'featured',
+        styleText: 'shadow-sm shadow-cyan-950/5',
+        width: 100,
+        sortOrder: 1,
+      },
+      {
+        id: 102,
+        userCardId: 1,
+        type: 'media',
+        title: 'Dashboard UI',
+        mediaUrl:
+          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80',
+        caption: 'Vista conceptual de un panel administrativo responsive.',
+        template: 'wide',
+        width: 100,
+        sortOrder: 2,
+      },
+      {
+        id: 103,
+        userCardId: 1,
+        type: 'list',
+        title: 'Stack principal',
+        content: 'React; TypeScript; Tailwind CSS; Motion; Vite',
+        template: 'compact',
+        width: 100,
+        sortOrder: 3,
+      },
+    ],
+  },
+  {
+    id: 2,
+    userId: 7,
+    title: 'Backend & Product Flow',
+    description:
+      'APIs, datos y pantallas conectadas para que el portfolio pueda crecer como producto.',
+    template: 'default',
+    styleText: 'ring-1 ring-emerald-500/10',
+    width: 50,
+    sortOrder: 2,
+    blocks: [
+      {
+        id: 201,
+        userCardId: 2,
+        type: 'text',
+        title: 'Arquitectura',
+        content:
+          'Trabajo con contratos claros entre frontend y backend para que cada componente pueda consumir DTOs reales sin reescrituras grandes.',
+        template: 'featured',
+        width: 100,
+        sortOrder: 1,
+      },
+      {
+        id: 202,
+        userCardId: 2,
+        type: 'quote',
+        title: 'Enfoque',
+        content:
+          'Una buena interfaz de edición debe sentirse directa: crear, ordenar y publicar sin fricción.',
+        caption: 'Principio de diseño del gestor de portfolios',
+        template: 'highlight',
+        styleText: 'shadow-sm shadow-emerald-950/5',
+        width: 100,
+        sortOrder: 2,
+      },
+      {
+        id: 203,
+        userCardId: 2,
+        type: 'media',
+        title: 'Workspace',
+        mediaUrl:
+          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80',
+        caption: 'Bloque visual para proyectos, casos de estudio o contenido editable.',
+        template: 'split',
+        width: 100,
+        sortOrder: 3,
+      },
+    ],
+  },
+  {
+    id: 3,
+    userId: 7,
+    title: 'Case Study Principal',
+    description:
+      'Una card pensada como contenido principal, con lectura vertical y bloques amplios.',
+    template: 'editorial',
+    styleText: 'ring-1 ring-blue-500/10',
+    width: 100,
+    sortOrder: 3,
+    blocks: [
+      {
+        id: 301,
+        userCardId: 3,
+        type: 'text',
+        title: 'Contexto del proyecto',
+        content:
+          'El objetivo fue convertir un portfolio estatico en una experiencia editable, donde cada usuario pueda ordenar proyectos, destacar informacion clave y mantener su contenido actualizado.',
+        template: 'main',
+        width: 70,
+        sortOrder: 1,
+      },
+      {
+        id: 303,
+        userCardId: 3,
+        type: 'list',
+        title: 'Puntos clave',
+        content:
+          'Edicion modular; Ordenamiento por sortOrder; Bloques reutilizables; Preparado para API',
+        template: 'main-skills',
+        styleText: 'min-h-44',
+        width: 30,
+        sortOrder: 2,
+      },
+      {
+        id: 302,
+        userCardId: 3,
+        type: 'media',
+        title: 'Vista principal',
+        mediaUrl:
+          'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
+        caption:
+          'Ejemplo de bloque visual ancho dentro de una card de lectura principal.',
+        template: 'main-wide',
+        width: 100,
+        sortOrder: 3,
+      },
+    ],
+  },
+  {
+    id: 4,
+    userId: 7,
+    title: 'Roadmap de Edicion',
+    description:
+      'Otro ejemplo debajo del principal para validar cards extensas apiladas en una sola columna.',
+    template: 'default',
+    styleText: 'ring-1 ring-zinc-500/10',
+    width: 100,
+    sortOrder: 4,
+    blocks: [
+      {
+        id: 401,
+        userCardId: 4,
+        type: 'quote',
+        title: 'Decision de producto',
+        content:
+          'La estructura de bloques permite que el usuario edite contenido sin depender de una plantilla rigida.',
+        caption: 'Nota para la futura experiencia de administracion',
+        template: 'main-highlight',
+        width: 100,
+        sortOrder: 1,
+      },
+      {
+        id: 402,
+        userCardId: 4,
+        type: 'text',
+        title: 'Proxima etapa',
+        content:
+          'Cuando lleguen los DTO reales desde la API, esta capa de componentes puede recibir los datos directamente y mantener la misma presentacion.',
+        template: 'main',
+        width: 100,
+        sortOrder: 2,
+      },
+      {
+        id: 403,
+        userCardId: 4,
+        type: 'media',
+        title: 'Editor conceptual',
+        mediaUrl:
+          'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80',
+        caption:
+          'Referencia visual para una futura pantalla de gestion de portfolios.',
+        template: 'main-wide',
+        width: 100,
+        sortOrder: 3,
+      },
+    ],
+  },
+];
