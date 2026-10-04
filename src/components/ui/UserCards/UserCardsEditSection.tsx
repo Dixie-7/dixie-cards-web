@@ -3,7 +3,6 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import type { ReactNode } from 'react';
 import type { UserCardBlockDto, UserCardDto } from '@/types/userCards';
 import { getPlacementClassFromStyleText } from '@/utils/styleText';
 import UserCard from './UserCard';
@@ -16,7 +15,6 @@ interface UserCardsEditSectionProps {
   onEditBlock: (card: UserCardDto, block: UserCardBlockDto) => void;
   onDeleteBlock: (card: UserCardDto, block: UserCardBlockDto) => void;
   activeCardId?: number | null;
-  renderEditorBelowCard?: (card: UserCardDto) => ReactNode;
 }
 
 const iconButtonClass =
@@ -46,7 +44,6 @@ export default function UserCardsEditSection({
   onEditBlock,
   onDeleteBlock,
   activeCardId = null,
-  renderEditorBelowCard,
 }: UserCardsEditSectionProps) {
   const sortedCards = [...cards].sort(
     (currentCard, nextCard) => currentCard.sortOrder - nextCard.sortOrder,
@@ -77,9 +74,6 @@ export default function UserCardsEditSection({
         <div className="-m-2.5 flex flex-wrap">
           {sortedCards.map((card) => {
             const isActiveCard = card.id === activeCardId;
-            const editor = isActiveCard
-              ? renderEditorBelowCard?.(card)
-              : null;
 
             return (
               <div
@@ -87,7 +81,14 @@ export default function UserCardsEditSection({
                 className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)}`}
                 style={getWidthStyle(isActiveCard ? 100 : card.width)}
               >
-                <div style={getWidthStyle(isActiveCard ? card.width : 100)}>
+                <div
+                  className={
+                    isActiveCard
+                      ? 'rounded-xl ring-2 ring-cyan-400/70 ring-offset-4 ring-offset-white dark:ring-cyan-300/60 dark:ring-offset-zinc-950'
+                      : ''
+                  }
+                  style={getWidthStyle(isActiveCard ? card.width : 100)}
+                >
                   <UserCard
                     card={card}
                     actions={
@@ -145,8 +146,6 @@ export default function UserCardsEditSection({
                     )}
                   />
                 </div>
-
-                {editor && <div className="mt-4">{editor}</div>}
               </div>
             );
           })}

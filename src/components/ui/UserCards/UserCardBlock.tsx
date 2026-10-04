@@ -333,6 +333,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
     <div
       className={`relative p-2.5 ${verticalAlign} ${horizontalAlign}`}
       style={{ width: `${getSafeWidth(block.width)}%` }}
+      data-user-card-block-id={block.id}
     >
       {actions && (
         <div className="absolute right-4 top-4 z-10 flex gap-1.5">

@@ -6,7 +6,6 @@ import {
   PlusIcon,
   Squares2X2Icon,
   SwatchIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
   useMemo,
@@ -34,6 +33,7 @@ import {
   styleTextIncludes,
   toggleStyleOption,
 } from '@/utils/styleText';
+import FloatingEditorWindow from './FloatingEditorWindow';
 import UserCard from './UserCard';
 import UserCardsEditSection from './UserCardsEditSection';
 import UserCardsSection from './UserCardsSection';
@@ -77,7 +77,7 @@ const fieldClass =
 const labelClass =
   'mb-1.5 block text-xs font-semibold text-zinc-600 dark:text-zinc-300';
 const formClass =
-  'rounded-lg border border-zinc-200 bg-white p-4 text-left dark:border-zinc-800 dark:bg-zinc-950/80';
+  'text-left';
 
 function getNextSortOrder(items: Array<{ sortOrder: number }>) {
   return Math.max(0, ...items.map((item) => item.sortOrder)) + 1;
@@ -530,7 +530,6 @@ export default function UserCardsCrudPanel({
 
     return card;
   });
-
   const openCreateCard = () => {
     setIsEditMode(true);
     setCardEditor({ mode: 'create' });
@@ -672,11 +671,6 @@ export default function UserCardsCrudPanel({
 
     return (
       <form onSubmit={handleSaveCard} className={formClass}>
-        <EditorHeader
-          title={cardEditor.mode === 'create' ? 'Create UserCard' : 'Edit UserCard'}
-          description="The card above is the live result. Cancel discards this draft."
-          onCancel={closeCardEditor}
-        />
         <CardFields
           draft={cardDraft}
           sortOrderMax={Math.max(
@@ -698,15 +692,6 @@ export default function UserCardsCrudPanel({
 
     return (
       <form onSubmit={handleSaveBlock} className={formClass}>
-        <EditorHeader
-          title={
-            blockEditor.mode === 'create'
-              ? 'Create UserCardBlock'
-              : 'Edit UserCardBlock'
-          }
-          description={`Editing inside ${blockEditorCard.title}. The card above is the live result.`}
-          onCancel={closeBlockEditor}
-        />
         <BlockFields
           draft={blockDraft}
           sortOrderMax={Math.max(
@@ -720,6 +705,38 @@ export default function UserCardsCrudPanel({
       </form>
     );
   };
+  const activeBlockId =
+    blockEditor?.mode === 'edit' ? blockEditor.blockId : null;
+  const floatingEditorTitle =
+    cardEditor !== null
+      ? cardEditor.mode === 'create'
+        ? 'Create UserCard'
+        : 'Edit UserCard'
+      : blockEditor?.mode === 'create'
+        ? 'Create UserCardBlock'
+        : blockEditor?.mode === 'edit'
+          ? 'Edit UserCardBlock'
+          : '';
+  const floatingEditorDescription =
+    cardEditor !== null
+      ? 'Drag this editor anywhere. The portfolio preview updates live.'
+      : blockEditorCard
+        ? `Editing inside ${blockEditorCard.title}. Drag this editor away from the preview.`
+        : 'Drag this editor anywhere. The portfolio preview updates live.';
+  const floatingEditorContent =
+    cardEditor !== null
+      ? renderCardEditor()
+      : blockEditor !== null
+        ? renderBlockEditor()
+        : null;
+  const floatingEditorAvoidSelector =
+    activeBlockId !== null
+      ? `[data-user-card-block-id="${activeBlockId}"]`
+      : activeCardId !== null
+        ? `[data-user-card-id="${activeCardId}"]`
+        : null;
+  const closeFloatingEditor =
+    cardEditor !== null ? closeCardEditor : closeBlockEditor;
 
   return (
     <>
@@ -794,7 +811,6 @@ export default function UserCardsCrudPanel({
                 <UserCard card={cardPreview} />
               </div>
             </div>
-            {renderCardEditor()}
           </div>
         </section>
       )}
@@ -803,9 +819,6 @@ export default function UserCardsCrudPanel({
         <UserCardsEditSection
           cards={editModeCards}
           activeCardId={activeCardId}
-          renderEditorBelowCard={() =>
-            cardEditor?.mode === 'edit' ? renderCardEditor() : renderBlockEditor()
-          }
           onEditCard={openEditCard}
           onDeleteCard={(card) => void handleDeleteCard(card)}
           onAddBlock={openCreateBlock}
@@ -815,39 +828,18 @@ export default function UserCardsCrudPanel({
       ) : (
         <UserCardsSection cards={displayCards} />
       )}
-    </>
-  );
-}
 
-function EditorHeader({
-  title,
-  description,
-  onCancel,
-}: {
-  title: string;
-  description: string;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <div>
-        <p className="text-sm font-semibold text-zinc-950 dark:text-white">
-          {title}
-        </p>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {description}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onCancel}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-        aria-label="Cancel changes"
-        title="Cancel"
-      >
-        <XMarkIcon className="h-4 w-4" aria-hidden="true" />
-      </button>
-    </div>
+      {floatingEditorContent && (
+        <FloatingEditorWindow
+          title={floatingEditorTitle}
+          description={floatingEditorDescription}
+          avoidSelector={floatingEditorAvoidSelector}
+          onClose={closeFloatingEditor}
+        >
+          {floatingEditorContent}
+        </FloatingEditorWindow>
+      )}
+    </>
   );
 }
 

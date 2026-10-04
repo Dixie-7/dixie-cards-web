@@ -56,6 +56,7 @@ export default function UserCard({
   return (
     <article
       className={`relative ${templateStyles.article} ${styleText} ${className}`}
+      data-user-card-id={card.id}
     >
       {actions && (
         <div className="absolute right-4 top-4 z-10 flex gap-1.5">
