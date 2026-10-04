@@ -19,6 +19,7 @@ export const userCardsMock: UserCardDto[] = [
         title: 'Maximiliano Lagos',
         content:
           'Creo experiencias digitales con React, TypeScript y .NET, cuidando tanto la arquitectura como la forma en que cada pantalla se siente al usarla.',
+        icon: 'none',
         template: 'main-presentation',
         styleText: 'shadow-lg shadow-cyan-950/10',
         width: 100,
@@ -31,6 +32,7 @@ export const userCardsMock: UserCardDto[] = [
         title: 'Foco profesional',
         content:
           'Frontend architecture; Portfolio management; API-driven UI; Product workflows',
+        icon: 'sparkles',
         template: 'main-skills',
         styleText: 'backdrop-blur-sm',
         width: 30,
@@ -70,6 +72,7 @@ export const userCardsMock: UserCardDto[] = [
         title: 'Perfil',
         content:
           'Desarrollo aplicaciones React con TypeScript, priorizando claridad visual, rendimiento y una arquitectura fácil de mantener.',
+        icon: 'code',
         template: 'featured',
         styleText: 'shadow-sm shadow-cyan-950/5',
         width: 100,
@@ -83,6 +86,7 @@ export const userCardsMock: UserCardDto[] = [
         mediaUrl:
           'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80',
         caption: 'Vista conceptual de un panel administrativo responsive.',
+        icon: 'chart',
         template: 'wide',
         width: 100,
         sortOrder: 2,
@@ -117,6 +121,7 @@ export const userCardsMock: UserCardDto[] = [
         title: 'Arquitectura',
         content:
           'Trabajo con contratos claros entre frontend y backend para que cada componente pueda consumir DTOs reales sin reescrituras grandes.',
+        icon: 'cpu',
         template: 'featured',
         width: 100,
         sortOrder: 1,
@@ -129,6 +134,7 @@ export const userCardsMock: UserCardDto[] = [
         content:
           'Una buena interfaz de edición debe sentirse directa: crear, ordenar y publicar sin fricción.',
         caption: 'Principio de diseño del gestor de portfolios',
+        icon: 'lightbulb',
         template: 'highlight',
         styleText: 'shadow-sm shadow-emerald-950/5',
         width: 100,

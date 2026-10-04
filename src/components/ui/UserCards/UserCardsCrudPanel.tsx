@@ -1,10 +1,23 @@
 import {
+  AdjustmentsHorizontalIcon,
   CheckIcon,
+  DocumentTextIcon,
+  PaintBrushIcon,
   PlusIcon,
+  Squares2X2Icon,
+  SwatchIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
+  useMemo,
+  useState,
+  type ComponentType,
+  type FormEvent,
+  type ReactNode,
+  type SVGProps,
+} from 'react';
+import {
+  blockIconOptions,
   blockStyleOptions,
   blockTemplateOptions,
   cardStyleOptions,
@@ -57,6 +70,7 @@ type CardEditor = { mode: 'create' } | { mode: 'edit'; cardId: number };
 type BlockEditor =
   | { mode: 'create'; cardId: number }
   | { mode: 'edit'; cardId: number; blockId: number };
+type EditorSectionIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const fieldClass =
   'w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white';
@@ -115,6 +129,7 @@ function createEmptyBlockDraft(blocks: UserCardBlockDto[]): BlockDraft {
     title: 'New block',
     content: 'Write the block content here.',
     mediaUrl: '',
+    icon: '',
     template: 'default',
     styleText: '',
     caption: '',
@@ -129,6 +144,7 @@ function createBlockDraft(block: UserCardBlockDto): BlockDraft {
     title: block.title ?? '',
     content: block.content ?? '',
     mediaUrl: block.mediaUrl ?? '',
+    icon: block.icon ?? '',
     template: block.template ?? 'default',
     styleText: block.styleText ?? '',
     caption: block.caption ?? '',
@@ -155,6 +171,7 @@ function getBlockPayload(draft: BlockDraft): UserCardBlockPayload {
     title: draft.title?.trim() || null,
     content: draft.content?.trim() || null,
     mediaUrl: draft.mediaUrl?.trim() || null,
+    icon: draft.icon?.trim() || null,
     template: draft.template?.trim() || 'default',
     styleText: normalizeStyleText(draft.styleText),
     caption: draft.caption?.trim() || null,
@@ -211,6 +228,31 @@ function TemplateSelect({
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function IconSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label>
+      <span className={labelClass}>Icon</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={fieldClass}
+      >
+        {blockIconOptions.map((option) => (
+          <option key={option.value || 'auto'} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -292,6 +334,39 @@ function SortOrderControl({
   );
 }
 
+function EditorSection({
+  title,
+  description,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  description?: string;
+  icon: EditorSectionIcon;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-100 bg-cyan-50 text-cyan-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-200">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+            {title}
+          </h3>
+          {description && (
+            <p className="mt-0.5 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function StyleOptionSelector({
   options,
   value,
@@ -354,7 +429,7 @@ function EditorActions({
   label: string;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 pt-4">
       <button
         type="submit"
         className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
@@ -787,75 +862,84 @@ function CardFields({
 }) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label>
-          <span className={labelClass}>Title</span>
-          <input
-            value={draft.title}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                title: event.target.value,
-              }))
+      <EditorSection
+        title="Card content"
+        description="Base data, template, width and order."
+        icon={Squares2X2Icon}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <label>
+            <span className={labelClass}>Title</span>
+            <input
+              value={draft.title}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  title: event.target.value,
+                }))
+              }
+              className={fieldClass}
+            />
+          </label>
+          <label>
+            <span className={labelClass}>UserId</span>
+            <input
+              type="number"
+              value={draft.userId}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  userId: Number(event.target.value),
+                }))
+              }
+              className={fieldClass}
+            />
+          </label>
+          <TemplateSelect
+            id="card-template"
+            label="Card template"
+            options={cardTemplateOptions}
+            value={draft.template ?? 'default'}
+            onChange={(template) =>
+              onChange((currentDraft) => ({ ...currentDraft, template }))
             }
-            className={fieldClass}
           />
-        </label>
-        <label>
-          <span className={labelClass}>UserId</span>
-          <input
-            type="number"
-            value={draft.userId}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                userId: Number(event.target.value),
-              }))
+          <WidthControl
+            label="Width (%)"
+            value={draft.width}
+            onChange={(width) =>
+              onChange((currentDraft) => ({ ...currentDraft, width }))
             }
-            className={fieldClass}
           />
-        </label>
-        <TemplateSelect
-          id="card-template"
-          label="Card template"
-          options={cardTemplateOptions}
-          value={draft.template ?? 'default'}
-          onChange={(template) =>
-            onChange((currentDraft) => ({ ...currentDraft, template }))
-          }
-        />
-        <WidthControl
-          label="Width (%)"
-          value={draft.width}
-          onChange={(width) =>
-            onChange((currentDraft) => ({ ...currentDraft, width }))
-          }
-        />
-        <SortOrderControl
-          value={draft.sortOrder}
-          max={sortOrderMax}
-          onChange={(sortOrder) =>
-            onChange((currentDraft) => ({ ...currentDraft, sortOrder }))
-          }
-        />
-        <label className="md:col-span-2">
-          <span className={labelClass}>Description</span>
-          <textarea
-            value={draft.description ?? ''}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                description: event.target.value,
-              }))
+          <SortOrderControl
+            value={draft.sortOrder}
+            max={sortOrderMax}
+            onChange={(sortOrder) =>
+              onChange((currentDraft) => ({ ...currentDraft, sortOrder }))
             }
-            rows={3}
-            className={fieldClass}
           />
-        </label>
-      </div>
+          <label className="md:col-span-2">
+            <span className={labelClass}>Description</span>
+            <textarea
+              value={draft.description ?? ''}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  description: event.target.value,
+                }))
+              }
+              rows={3}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+      </EditorSection>
 
-      <div>
-        <span className={labelClass}>Selectable styles</span>
+      <EditorSection
+        title="Card styles"
+        description="Clickable Tailwind presets applied to styleText."
+        icon={SwatchIcon}
+      >
         <StyleOptionSelector
           options={cardStyleOptions}
           value={draft.styleText ?? ''}
@@ -863,22 +947,28 @@ function CardFields({
             onChange((currentDraft) => ({ ...currentDraft, styleText }))
           }
         />
-      </div>
+      </EditorSection>
 
-      <label className="block">
-        <span className={labelClass}>styleText</span>
-        <textarea
-          value={draft.styleText ?? ''}
-          onChange={(event) =>
-            onChange((currentDraft) => ({
-              ...currentDraft,
-              styleText: event.target.value,
-            }))
-          }
-          rows={2}
-          className={fieldClass}
-        />
-      </label>
+      <EditorSection
+        title="Advanced styleText"
+        description="Manual Tailwind classes for custom API-driven styling."
+        icon={AdjustmentsHorizontalIcon}
+      >
+        <label className="block">
+          <span className={labelClass}>styleText</span>
+          <textarea
+            value={draft.styleText ?? ''}
+            onChange={(event) =>
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                styleText: event.target.value,
+              }))
+            }
+            rows={2}
+            className={fieldClass}
+          />
+        </label>
+      </EditorSection>
     </div>
   );
 }
@@ -894,105 +984,129 @@ function BlockFields({
 }) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label>
-          <span className={labelClass}>Type</span>
-          <select
-            value={draft.type}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                type: event.target.value,
-              }))
+      <EditorSection
+        title="Block structure"
+        description="Type, template, icon, width and order."
+        icon={Squares2X2Icon}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <label>
+            <span className={labelClass}>Type</span>
+            <select
+              value={draft.type}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  type: event.target.value,
+                }))
+              }
+              className={fieldClass}
+            >
+              <option value="text">Text</option>
+              <option value="media">Media</option>
+              <option value="list">List</option>
+              <option value="quote">Quote</option>
+            </select>
+          </label>
+          <TemplateSelect
+            id="block-template"
+            label="Block template"
+            options={blockTemplateOptions}
+            value={draft.template ?? 'default'}
+            onChange={(template) =>
+              onChange((currentDraft) => ({ ...currentDraft, template }))
             }
-            className={fieldClass}
-          >
-            <option value="text">Text</option>
-            <option value="media">Media</option>
-            <option value="list">List</option>
-            <option value="quote">Quote</option>
-          </select>
-        </label>
-        <TemplateSelect
-          id="block-template"
-          label="Block template"
-          options={blockTemplateOptions}
-          value={draft.template ?? 'default'}
-          onChange={(template) =>
-            onChange((currentDraft) => ({ ...currentDraft, template }))
-          }
-        />
-        <label>
-          <span className={labelClass}>Title</span>
-          <input
-            value={draft.title ?? ''}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                title: event.target.value,
-              }))
-            }
-            className={fieldClass}
           />
-        </label>
-        <WidthControl
-          label="Width (%)"
-          value={draft.width}
-          onChange={(width) =>
-            onChange((currentDraft) => ({ ...currentDraft, width }))
-          }
-        />
-        <SortOrderControl
-          value={draft.sortOrder}
-          max={sortOrderMax}
-          onChange={(sortOrder) =>
-            onChange((currentDraft) => ({ ...currentDraft, sortOrder }))
-          }
-        />
-        <label>
-          <span className={labelClass}>Media URL</span>
-          <input
-            value={draft.mediaUrl ?? ''}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                mediaUrl: event.target.value,
-              }))
+          <IconSelect
+            value={draft.icon ?? ''}
+            onChange={(icon) =>
+              onChange((currentDraft) => ({ ...currentDraft, icon }))
             }
-            className={fieldClass}
           />
-        </label>
-        <label className="md:col-span-2">
-          <span className={labelClass}>Content</span>
-          <textarea
-            value={draft.content ?? ''}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                content: event.target.value,
-              }))
+          <WidthControl
+            label="Width (%)"
+            value={draft.width}
+            onChange={(width) =>
+              onChange((currentDraft) => ({ ...currentDraft, width }))
             }
-            rows={3}
-            className={fieldClass}
           />
-        </label>
-        <label className="md:col-span-2">
-          <span className={labelClass}>Caption</span>
-          <input
-            value={draft.caption ?? ''}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                caption: event.target.value,
-              }))
+          <SortOrderControl
+            value={draft.sortOrder}
+            max={sortOrderMax}
+            onChange={(sortOrder) =>
+              onChange((currentDraft) => ({ ...currentDraft, sortOrder }))
             }
-            className={fieldClass}
           />
-        </label>
-      </div>
+        </div>
+      </EditorSection>
 
-      <div>
-        <span className={labelClass}>Selectable styles</span>
+      <EditorSection
+        title="Block content"
+        description="Text, media URL and optional caption."
+        icon={DocumentTextIcon}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <label>
+            <span className={labelClass}>Title</span>
+            <input
+              value={draft.title ?? ''}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  title: event.target.value,
+                }))
+              }
+              className={fieldClass}
+            />
+          </label>
+          <label>
+            <span className={labelClass}>Media URL</span>
+            <input
+              value={draft.mediaUrl ?? ''}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  mediaUrl: event.target.value,
+                }))
+              }
+              className={fieldClass}
+            />
+          </label>
+          <label className="md:col-span-2">
+            <span className={labelClass}>Content</span>
+            <textarea
+              value={draft.content ?? ''}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  content: event.target.value,
+                }))
+              }
+              rows={3}
+              className={fieldClass}
+            />
+          </label>
+          <label className="md:col-span-2">
+            <span className={labelClass}>Caption</span>
+            <input
+              value={draft.caption ?? ''}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  caption: event.target.value,
+                }))
+              }
+              className={fieldClass}
+            />
+          </label>
+        </div>
+      </EditorSection>
+
+      <EditorSection
+        title="Block styles"
+        description="Text sizing, alignment, background, opacity and accents."
+        icon={PaintBrushIcon}
+      >
         <StyleOptionSelector
           options={blockStyleOptions}
           value={draft.styleText ?? ''}
@@ -1000,22 +1114,28 @@ function BlockFields({
             onChange((currentDraft) => ({ ...currentDraft, styleText }))
           }
         />
-      </div>
+      </EditorSection>
 
-      <label className="block">
-        <span className={labelClass}>styleText</span>
-        <textarea
-          value={draft.styleText ?? ''}
-          onChange={(event) =>
-            onChange((currentDraft) => ({
-              ...currentDraft,
-              styleText: event.target.value,
-            }))
-          }
-          rows={2}
-          className={fieldClass}
-        />
-      </label>
+      <EditorSection
+        title="Advanced styleText"
+        description="Manual Tailwind classes for custom API-driven styling."
+        icon={AdjustmentsHorizontalIcon}
+      >
+        <label className="block">
+          <span className={labelClass}>styleText</span>
+          <textarea
+            value={draft.styleText ?? ''}
+            onChange={(event) =>
+              onChange((currentDraft) => ({
+                ...currentDraft,
+                styleText: event.target.value,
+              }))
+            }
+            rows={2}
+            className={fieldClass}
+          />
+        </label>
+      </EditorSection>
     </div>
   );
 }

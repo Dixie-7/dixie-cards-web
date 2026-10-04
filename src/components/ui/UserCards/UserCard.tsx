@@ -66,11 +66,11 @@ export default function UserCard({
         <p className={templateStyles.eyebrow}>
           User #{card.userId} / Card #{card.id} / {card.width}% width
         </p>
-        <h2 className={templateStyles.title}>
+        <h2 className={templateStyles.title} data-card-title>
           {card.title}
         </h2>
         {card.description && (
-          <p className={templateStyles.description}>
+          <p className={templateStyles.description} data-card-description>
             {card.description}
           </p>
         )}

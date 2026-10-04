@@ -1,7 +1,16 @@
 import {
+  BoltIcon,
+  ChartBarIcon,
+  CodeBracketIcon,
+  CommandLineIcon,
+  CpuChipIcon,
   DocumentTextIcon,
+  GlobeAltIcon,
+  LightBulbIcon,
+  PaintBrushIcon,
   PhotoIcon,
   QueueListIcon,
+  RocketLaunchIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import type { ReactNode } from 'react';
@@ -18,11 +27,23 @@ interface UserCardBlockProps {
 }
 
 const blockIconMap = {
+  bolt: BoltIcon,
+  chart: ChartBarIcon,
+  code: CodeBracketIcon,
+  command: CommandLineIcon,
+  cpu: CpuChipIcon,
+  document: DocumentTextIcon,
+  globe: GlobeAltIcon,
+  lightbulb: LightBulbIcon,
   text: DocumentTextIcon,
   media: PhotoIcon,
   image: PhotoIcon,
+  paint: PaintBrushIcon,
+  photo: PhotoIcon,
   list: QueueListIcon,
   quote: SparklesIcon,
+  rocket: RocketLaunchIcon,
+  sparkles: SparklesIcon,
 };
 
 type BlockTemplateStyle = {
@@ -291,13 +312,16 @@ function getSafeWidth(width: number) {
 export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
   const normalizedType = block.type.trim().toLowerCase();
   const normalizedTemplate = block.template?.trim().toLowerCase() ?? 'default';
+  const normalizedIcon = block.icon?.trim().toLowerCase() ?? '';
+  const iconKey = normalizedIcon || normalizedType;
   const Icon =
-    blockIconMap[normalizedType as keyof typeof blockIconMap] ?? DocumentTextIcon;
+    blockIconMap[iconKey as keyof typeof blockIconMap] ?? DocumentTextIcon;
   const templateStyles =
     blockTemplateStyles[normalizedTemplate] ?? blockTemplateStyles.default;
   const listItems = normalizedType === 'list' ? getListItems(block.content) : [];
   const isMediaBlock = normalizedType === 'media' || normalizedType === 'image';
   const hasHeaderContent = Boolean(block.title) || templateStyles.showEyebrow;
+  const showIcon = templateStyles.showIcon && normalizedIcon !== 'none';
   const verticalAlign =
     getPlacementClassFromStyleText(block.styleText) ||
     templateStyles.verticalAlign ||
@@ -317,19 +341,21 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
       )}
       <article className={`w-full ${templateStyles.article} ${styleText}`}>
         {templateStyles.showHeader && hasHeaderContent && (
-          <div className={templateStyles.header}>
-            {templateStyles.showIcon && (
+          <div className={`${templateStyles.header} w-full`} data-block-header>
+            {showIcon && (
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${templateStyles.icon}`}
+                data-block-icon
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
             )}
 
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1" data-block-heading>
               {block.title && (
                 <h3
-                  className={`${templateStyles.title} font-semibold text-zinc-950 dark:text-white`}
+                  className={`${templateStyles.title} w-full font-semibold text-zinc-950 dark:text-white`}
+                  data-block-title
                 >
                   {block.title}
                 </h3>
@@ -352,7 +378,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
               className={`${templateStyles.figure} w-full object-cover`}
             />
             {block.caption && (
-              <figcaption className={templateStyles.caption}>
+              <figcaption className={templateStyles.caption} data-block-content>
                 {block.caption}
               </figcaption>
             )}
@@ -362,6 +388,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
         {normalizedType === 'quote' && block.content && (
           <blockquote
             className={`${templateStyles.quote} text-left font-medium leading-relaxed text-zinc-800 dark:text-zinc-100`}
+            data-block-content
           >
             "{block.content}"
             {block.caption && (
@@ -373,9 +400,12 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
         )}
 
         {normalizedType === 'list' && listItems && listItems.length > 0 && (
-          <ul className={`flex flex-wrap text-left ${templateStyles.list}`}>
+          <ul
+            className={`flex flex-wrap text-left ${templateStyles.list}`}
+            data-block-content
+          >
             {listItems.map((item) => (
-              <li key={item} className={templateStyles.listItem}>
+              <li key={item} className={templateStyles.listItem} data-block-content>
                 {item}
               </li>
             ))}
@@ -387,6 +417,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
           normalizedType !== 'list' && (
             <p
               className={`text-left ${templateStyles.text} text-zinc-600 dark:text-zinc-300`}
+              data-block-content
             >
               {block.content}
             </p>

@@ -5,6 +5,7 @@ export interface UserCardBlockDto {
   title?: string | null;
   content?: string | null;
   mediaUrl?: string | null;
+  icon?: string | null;
   template?: string | null;
   styleText?: string | null;
   caption?: string | null;
