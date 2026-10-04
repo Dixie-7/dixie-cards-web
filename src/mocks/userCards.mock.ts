@@ -240,12 +240,12 @@ export const userCardsMock: UserCardDto[] = [
       {
         id: 403,
         userCardId: 4,
-        type: 'media',
-        title: 'Editor conceptual',
-        mediaUrl:
-          'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80',
+        type: 'video',
+        title: 'Demo en video',
+        mediaUrl: 'https://www.youtube.com/watch?v=LXb3EKWsInQ',
         caption:
-          'Referencia visual para una futura pantalla de gestion de portfolios.',
+          'Ejemplo de bloque video usando una URL de YouTube.',
+        icon: 'video',
         template: 'main-wide',
         width: 100,
         sortOrder: 3,

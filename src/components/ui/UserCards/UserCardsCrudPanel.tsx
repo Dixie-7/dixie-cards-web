@@ -29,9 +29,14 @@ import type {
 } from '@/services/userCardsApi';
 import type { UserCardBlockDto, UserCardDto } from '@/types/userCards';
 import {
+  getHexColorFromStyleText,
+  getHorizontalPlacementClassFromStyleText,
+  type HexColorTarget,
+  isValidHexColor,
   normalizeStyleText,
   styleTextIncludes,
   toggleStyleOption,
+  upsertHexColorStyle,
 } from '@/utils/styleText';
 import FloatingEditorWindow from './FloatingEditorWindow';
 import UserCard from './UserCard';
@@ -331,6 +336,89 @@ function SortOrderControl({
         />
       </div>
     </label>
+  );
+}
+
+const hexColorControls: Array<{
+  target: HexColorTarget;
+  label: string;
+  fallback: string;
+}> = [
+  { target: 'bg', label: 'Background', fallback: '#0f172a' },
+  { target: 'text', label: 'Text', fallback: '#f8fafc' },
+  { target: 'border', label: 'Border', fallback: '#06b6d4' },
+  { target: 'ring', label: 'Ring', fallback: '#22c55e' },
+];
+
+function HexColorControls({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      {hexColorControls.map((control) => {
+        const selectedColor = getHexColorFromStyleText(value, control.target);
+        const pickerValue = isValidHexColor(selectedColor)
+          ? selectedColor
+          : control.fallback;
+
+        return (
+          <div
+            key={control.target}
+            className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                {control.label}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(upsertHexColorStyle(value, control.target, ''))
+                }
+                className="text-xs font-semibold text-zinc-500 transition hover:text-cyan-700 dark:text-zinc-400 dark:hover:text-cyan-200"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={pickerValue}
+                onChange={(event) =>
+                  onChange(
+                    upsertHexColorStyle(
+                      value,
+                      control.target,
+                      event.target.value,
+                    ),
+                  )
+                }
+                className="h-10 w-12 cursor-pointer rounded-lg border border-zinc-200 bg-transparent p-1 dark:border-zinc-800"
+                aria-label={`${control.label} color`}
+              />
+              <input
+                value={selectedColor}
+                placeholder={control.fallback}
+                onChange={(event) => {
+                  const nextColor = event.target.value.trim();
+
+                  if (nextColor === '' || isValidHexColor(nextColor)) {
+                    onChange(
+                      upsertHexColorStyle(value, control.target, nextColor),
+                    );
+                  }
+                }}
+                className={fieldClass}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -805,7 +893,7 @@ export default function UserCardsCrudPanel({
           <div className="mx-auto max-w-5xl">
             <div className="-m-2.5 mb-2 flex flex-wrap">
               <div
-                className="p-2.5"
+                className={`p-2.5 ${getHorizontalPlacementClassFromStyleText(cardPreview.styleText)}`}
                 style={{ width: `${getSafeWidth(cardPreview.width)}%` }}
               >
                 <UserCard card={cardPreview} />
@@ -929,16 +1017,24 @@ function CardFields({
 
       <EditorSection
         title="Card styles"
-        description="Clickable Tailwind presets applied to styleText."
+        description="Pick hex colors and combine them with clickable style presets."
         icon={SwatchIcon}
       >
-        <StyleOptionSelector
-          options={cardStyleOptions}
-          value={draft.styleText ?? ''}
-          onChange={(styleText) =>
-            onChange((currentDraft) => ({ ...currentDraft, styleText }))
-          }
-        />
+        <div className="space-y-4">
+          <HexColorControls
+            value={draft.styleText ?? ''}
+            onChange={(styleText) =>
+              onChange((currentDraft) => ({ ...currentDraft, styleText }))
+            }
+          />
+          <StyleOptionSelector
+            options={cardStyleOptions}
+            value={draft.styleText ?? ''}
+            onChange={(styleText) =>
+              onChange((currentDraft) => ({ ...currentDraft, styleText }))
+            }
+          />
+        </div>
       </EditorSection>
 
       <EditorSection
@@ -996,6 +1092,8 @@ function BlockFields({
             >
               <option value="text">Text</option>
               <option value="media">Media</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
               <option value="list">List</option>
               <option value="quote">Quote</option>
             </select>
@@ -1096,16 +1194,24 @@ function BlockFields({
 
       <EditorSection
         title="Block styles"
-        description="Text sizing, alignment, background, opacity and accents."
+        description="Pick hex colors, text styles, alignment, background, opacity and accents."
         icon={PaintBrushIcon}
       >
-        <StyleOptionSelector
-          options={blockStyleOptions}
-          value={draft.styleText ?? ''}
-          onChange={(styleText) =>
-            onChange((currentDraft) => ({ ...currentDraft, styleText }))
-          }
-        />
+        <div className="space-y-4">
+          <HexColorControls
+            value={draft.styleText ?? ''}
+            onChange={(styleText) =>
+              onChange((currentDraft) => ({ ...currentDraft, styleText }))
+            }
+          />
+          <StyleOptionSelector
+            options={blockStyleOptions}
+            value={draft.styleText ?? ''}
+            onChange={(styleText) =>
+              onChange((currentDraft) => ({ ...currentDraft, styleText }))
+            }
+          />
+        </div>
       </EditorSection>
 
       <EditorSection

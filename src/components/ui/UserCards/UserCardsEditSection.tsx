@@ -4,7 +4,10 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import type { UserCardBlockDto, UserCardDto } from '@/types/userCards';
-import { getPlacementClassFromStyleText } from '@/utils/styleText';
+import {
+  getHorizontalPlacementClassFromStyleText,
+  getPlacementClassFromStyleText,
+} from '@/utils/styleText';
 import UserCard from './UserCard';
 
 interface UserCardsEditSectionProps {
@@ -74,17 +77,20 @@ export default function UserCardsEditSection({
         <div className="-m-2.5 flex flex-wrap">
           {sortedCards.map((card) => {
             const isActiveCard = card.id === activeCardId;
+            const horizontalPlacement = getHorizontalPlacementClassFromStyleText(
+              card.styleText,
+            );
 
             return (
               <div
                 key={card.id}
-                className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)}`}
+                className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)} ${isActiveCard ? '' : horizontalPlacement}`}
                 style={getWidthStyle(isActiveCard ? 100 : card.width)}
               >
                 <div
                   className={
                     isActiveCard
-                      ? 'rounded-xl ring-2 ring-cyan-400/70 ring-offset-4 ring-offset-white dark:ring-cyan-300/60 dark:ring-offset-zinc-950'
+                      ? `rounded-xl ring-2 ring-cyan-400/70 ring-offset-4 ring-offset-white dark:ring-cyan-300/60 dark:ring-offset-zinc-950 ${horizontalPlacement}`
                       : ''
                   }
                   style={getWidthStyle(isActiveCard ? card.width : 100)}

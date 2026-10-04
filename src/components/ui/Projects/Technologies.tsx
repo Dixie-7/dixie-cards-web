@@ -28,9 +28,9 @@ const Technologies: React.FC<TechnologiesProps> = ({ technologies }) => {
             }}
           />
 
-          <div className="pointer-events-none absolute -top-10 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition duration-200 group-hover:opacity-100">
+          <div className="pointer-events-none absolute -top-10 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-violet-900 px-3 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition duration-200 group-hover:opacity-100">
             {tech}
-            <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 rotate-45 bg-zinc-900" />
+            <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 rotate-45 bg-violet-900" />
           </div>
         </div>
       ))}

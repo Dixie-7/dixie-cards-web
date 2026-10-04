@@ -1,7 +1,10 @@
 import { userCardsMock } from '@/mocks/userCards.mock';
 import UserCard from './UserCard';
 import type { UserCardDto } from '@/types/userCards';
-import { getPlacementClassFromStyleText } from '@/utils/styleText';
+import {
+  getHorizontalPlacementClassFromStyleText,
+  getPlacementClassFromStyleText,
+} from '@/utils/styleText';
 
 const mainCardTitle = 'MainCard';
 
@@ -50,7 +53,7 @@ export default function UserCardsSection({
           {sortedCards.map((card) => (
             <div
               key={card.id}
-              className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)}`}
+              className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)} ${getHorizontalPlacementClassFromStyleText(card.styleText)}`}
               style={getWidthStyle(card.width)}
             >
               <UserCard card={card} />

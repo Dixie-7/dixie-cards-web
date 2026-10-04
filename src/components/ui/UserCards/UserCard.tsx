@@ -2,7 +2,10 @@ import UserCardBlock from './UserCardBlock';
 import type { ReactNode } from 'react';
 import type { UserCardDto } from '@/types/userCards';
 import type { UserCardBlockDto } from '@/types/userCards';
-import { normalizeStyleText } from '@/utils/styleText';
+import {
+  getCustomColorStylesFromStyleText,
+  normalizeStyleText,
+} from '@/utils/styleText';
 
 interface UserCardProps {
   card: UserCardDto;
@@ -52,11 +55,13 @@ export default function UserCard({
     cardTemplateStyles[normalizedTemplate as keyof typeof cardTemplateStyles] ??
     cardTemplateStyles.default;
   const styleText = normalizeStyleText(card.styleText);
+  const customColorStyles = getCustomColorStylesFromStyleText(styleText);
 
   return (
     <article
       className={`relative ${templateStyles.article} ${styleText} ${className}`}
       data-user-card-id={card.id}
+      style={customColorStyles.rootStyle}
     >
       {actions && (
         <div className="absolute right-4 top-4 z-10 flex gap-1.5">
@@ -67,11 +72,19 @@ export default function UserCard({
         <p className={templateStyles.eyebrow}>
           User #{card.userId} / Card #{card.id} / {card.width}% width
         </p>
-        <h2 className={templateStyles.title} data-card-title>
+        <h2
+          className={templateStyles.title}
+          data-card-title
+          style={customColorStyles.textStyle}
+        >
           {card.title}
         </h2>
         {card.description && (
-          <p className={templateStyles.description} data-card-description>
+          <p
+            className={templateStyles.description}
+            data-card-description
+            style={customColorStyles.textStyle}
+          >
             {card.description}
           </p>
         )}

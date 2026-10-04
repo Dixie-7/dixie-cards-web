@@ -12,10 +12,13 @@ import {
   QueueListIcon,
   RocketLaunchIcon,
   SparklesIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import ReactPlayer from 'react-player';
 import type { ReactNode } from 'react';
 import type { UserCardBlockDto } from '@/types/userCards';
 import {
+  getCustomColorStylesFromStyleText,
   getHorizontalPlacementClassFromStyleText,
   getPlacementClassFromStyleText,
   normalizeStyleText,
@@ -44,6 +47,7 @@ const blockIconMap = {
   quote: SparklesIcon,
   rocket: RocketLaunchIcon,
   sparkles: SparklesIcon,
+  video: VideoCameraIcon,
 };
 
 type BlockTemplateStyle = {
@@ -319,7 +323,8 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
   const templateStyles =
     blockTemplateStyles[normalizedTemplate] ?? blockTemplateStyles.default;
   const listItems = normalizedType === 'list' ? getListItems(block.content) : [];
-  const isMediaBlock = normalizedType === 'media' || normalizedType === 'image';
+  const isImageBlock = normalizedType === 'media' || normalizedType === 'image';
+  const isVideoBlock = normalizedType === 'video';
   const hasHeaderContent = Boolean(block.title) || templateStyles.showEyebrow;
   const showIcon = templateStyles.showIcon && normalizedIcon !== 'none';
   const verticalAlign =
@@ -328,6 +333,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
     'self-center';
   const horizontalAlign = getHorizontalPlacementClassFromStyleText(block.styleText);
   const styleText = normalizeStyleText(block.styleText);
+  const customColorStyles = getCustomColorStylesFromStyleText(styleText);
 
   return (
     <div
@@ -340,7 +346,10 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
           {actions}
         </div>
       )}
-      <article className={`w-full ${templateStyles.article} ${styleText}`}>
+      <article
+        className={`w-full ${templateStyles.article} ${styleText}`}
+        style={customColorStyles.rootStyle}
+      >
         {templateStyles.showHeader && hasHeaderContent && (
           <div className={`${templateStyles.header} w-full`} data-block-header>
             {showIcon && (
@@ -357,6 +366,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
                 <h3
                   className={`${templateStyles.title} w-full font-semibold text-zinc-950 dark:text-white`}
                   data-block-title
+                  style={customColorStyles.textStyle}
                 >
                   {block.title}
                 </h3>
@@ -371,7 +381,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
           </div>
         )}
 
-        {isMediaBlock && block.mediaUrl && (
+        {isImageBlock && block.mediaUrl && (
           <figure className={templateStyles.figureFrame}>
             <img
               src={block.mediaUrl}
@@ -379,7 +389,34 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
               className={`${templateStyles.figure} w-full object-cover`}
             />
             {block.caption && (
-              <figcaption className={templateStyles.caption} data-block-content>
+              <figcaption
+                className={templateStyles.caption}
+                data-block-content
+                style={customColorStyles.textStyle}
+              >
+                {block.caption}
+              </figcaption>
+            )}
+          </figure>
+        )}
+
+        {isVideoBlock && block.mediaUrl && (
+          <figure className={templateStyles.figureFrame}>
+            <div className={`${templateStyles.figure} w-full bg-black`}>
+              <ReactPlayer
+                src={block.mediaUrl}
+                controls
+                width="100%"
+                height="100%"
+                playsInline
+              />
+            </div>
+            {block.caption && (
+              <figcaption
+                className={templateStyles.caption}
+                data-block-content
+                style={customColorStyles.textStyle}
+              >
                 {block.caption}
               </figcaption>
             )}
@@ -390,10 +427,14 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
           <blockquote
             className={`${templateStyles.quote} text-left font-medium leading-relaxed text-zinc-800 dark:text-zinc-100`}
             data-block-content
+            style={customColorStyles.textStyle}
           >
             "{block.content}"
             {block.caption && (
-              <footer className="mt-3 text-sm font-normal text-zinc-500 dark:text-zinc-400">
+              <footer
+                className="mt-3 text-sm font-normal text-zinc-500 dark:text-zinc-400"
+                style={customColorStyles.textStyle}
+              >
                 {block.caption}
               </footer>
             )}
@@ -406,19 +447,26 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
             data-block-content
           >
             {listItems.map((item) => (
-              <li key={item} className={templateStyles.listItem} data-block-content>
+              <li
+                key={item}
+                className={templateStyles.listItem}
+                data-block-content
+                style={customColorStyles.textStyle}
+              >
                 {item}
               </li>
             ))}
           </ul>
         )}
 
-        {!isMediaBlock &&
+        {!isImageBlock &&
+          !isVideoBlock &&
           normalizedType !== 'quote' &&
           normalizedType !== 'list' && (
             <p
               className={`text-left ${templateStyles.text} text-zinc-600 dark:text-zinc-300`}
               data-block-content
+              style={customColorStyles.textStyle}
             >
               {block.content}
             </p>

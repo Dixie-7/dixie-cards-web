@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import './App.css';
 import { mainCardTitle } from './constants/userCardEditorOptions';
 import LoginModal from './components/ui/Modal/LoginModal';
+import MusicPlayer from './components/ui/MusicPlayer/MusicPlayer';
 import ProjectsCarousel from './components/ui/Projects/ProjectsCarousel';
 import MainCard from './components/ui/UserCards/MainCard';
 import UserCardsCrudPanel from './components/ui/UserCards/UserCardsCrudPanel';
@@ -81,6 +82,8 @@ function App() {
         onClose={() => setIsLoginModalOpen(false)}
         restoreFocusRef={loginButtonRef}
       />
+
+      <MusicPlayer />
     </main>
   );
 }
