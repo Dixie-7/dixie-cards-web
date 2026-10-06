@@ -1,120 +1,214 @@
-import { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { useMemo, useState } from 'react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PhotoIcon,
+} from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'motion/react';
-import Technologies from './Technologies';
+import { isImageUserFile } from '@/services/userFilesApi';
+import type { UserFileDto } from '@/types/userFiles';
 
-type ProjectItem = {
-  id: string;
-  title: string;
-  imageSrc: string;
-  description: string;
-  technologies: string[];
-};
+interface ProjectsCarouselProps {
+  files: UserFileDto[];
+  isLoading?: boolean;
+  error?: string | null;
+}
 
-const projects: ProjectItem[] = [
-  {
-    id: 'portfolio-website',
-    title: 'Portfolio Website',
-    imageSrc:
-      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80',
-    description:
-      'A modern portfolio built with React, TypeScript and responsive design principles.',
-    technologies: ['Dotnet', 'TypeScript', 'Bootstrap'],
-  },
-  {
-    id: 'ecommerce-dashboard',
-    title: 'E-commerce Dashboard',
-    imageSrc:
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-    description:
-      'An admin dashboard for tracking sales, orders and customer activity in real time.',
-    technologies: ['React', 'TypeScript', 'Tailwind CSS'],
-  },
-  {
-    id: 'task-management-app',
-    title: 'Task Management App',
-    imageSrc:
-      'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=1200&q=80',
-    description:
-      'A clean productivity app to organize tasks, priorities and project workflows.',
-    technologies: ['SQL Server', 'CSS', 'HTML'],
-  },
-];
+function formatUploadedDate(uploadedAt: string) {
+  const date = new Date(uploadedAt);
 
-export default function ProjectsCarousel() {
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('es', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+export default function ProjectsCarousel({
+  files,
+  isLoading = false,
+  error = null,
+}: ProjectsCarouselProps) {
+  const imageFiles = useMemo(() => files.filter(isImageUserFile), [files]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   const handleNext = () => {
-    setDirection(1);
-    setCurrentIndex((previousIndex) => (previousIndex + 1) % projects.length);
-  };
+    if (imageFiles.length <= 1) {
+      return;
+    }
 
-  const handlePrev = () => {
-    setDirection(-1);
+    setDirection(1);
     setCurrentIndex(
-      (previousIndex) => (previousIndex - 1 + projects.length) % projects.length,
+      (previousIndex) =>
+        (Math.min(previousIndex, imageFiles.length - 1) + 1) %
+        imageFiles.length,
     );
   };
 
-  const currentProject = projects[currentIndex];
+  const handlePrev = () => {
+    if (imageFiles.length <= 1) {
+      return;
+    }
+
+    setDirection(-1);
+    setCurrentIndex(
+      (previousIndex) =>
+        (Math.min(previousIndex, imageFiles.length - 1) -
+          1 +
+          imageFiles.length) %
+        imageFiles.length,
+    );
+  };
+
+  const safeCurrentIndex =
+    imageFiles.length === 0
+      ? 0
+      : Math.min(currentIndex, imageFiles.length - 1);
+  const currentImage = imageFiles[safeCurrentIndex];
+  const hasMultipleImages = imageFiles.length > 1;
+  const uploadedDate = currentImage
+    ? formatUploadedDate(currentImage.uploadedAt)
+    : '';
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 py-10">
-      <div className="w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-2xl">
-        <div className="relative h-65 w-full overflow-hidden sm:h-[320px] md:h-[420px] lg:h-[500px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentProject.id}
-              initial={{ x: direction > 0 ? 300 : -300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: direction > 0 ? -300 : 300, opacity: 0 }}
-              transition={{ duration: 0.15, ease: 'easeInOut' }}
-              className="absolute inset-0"
-            >
-              <img
-                src={currentProject.imageSrc}
-                alt={currentProject.title}
-                className="h-full w-full object-cover"
-              />
+      <div className="w-full overflow-hidden rounded-lg bg-zinc-900 shadow-2xl shadow-black/30">
+        <div className="relative h-64 w-full overflow-hidden sm:h-[320px] md:h-[420px] lg:h-[500px]">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950 text-sm font-semibold text-zinc-300">
+              Cargando imagenes...
+            </div>
+          )}
 
-              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/35 to-transparent" />
+          {!isLoading && error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-red-950/50 px-6 text-center text-sm font-semibold text-red-100">
+              {error}
+            </div>
+          )}
 
-              <div className="absolute bottom-4 left-0 flex w-full justify-center px-4 md:bottom-6 md:px-8">
-                <div className="w-full max-w-[90%] rounded-xl bg-black/30 p-3 text-center backdrop-blur-sm md:max-w-2xl md:p-4">
-                  <h2 className="mb-2 text-lg font-bold text-white md:text-2xl lg:text-3xl">
-                    {currentProject.title}
-                  </h2>
-                  <p className="text-xs leading-relaxed text-zinc-200 md:text-sm lg:text-base">
-                    {currentProject.description}
-                  </p>
+          {!isLoading && !error && !currentImage && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950 px-6 text-center text-zinc-300">
+              <PhotoIcon className="h-10 w-10 text-cyan-200" aria-hidden="true" />
+              <p className="text-sm font-semibold">
+                No hay imagenes para mostrar en el carousel.
+              </p>
+            </div>
+          )}
+
+          {!isLoading && !error && currentImage && (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentImage.id}
+                initial={{ x: direction > 0 ? 300 : -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: direction > 0 ? -300 : 300, opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeInOut' }}
+                className="absolute inset-0"
+              >
+                {failedImageIds.has(currentImage.id) ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-zinc-950 px-6 text-center text-zinc-300">
+                    <PhotoIcon
+                      className="h-10 w-10 text-zinc-500"
+                      aria-hidden="true"
+                    />
+                    <p className="text-sm font-semibold">
+                      No se pudo cargar esta imagen.
+                    </p>
+                  </div>
+                ) : (
+                  <img
+                    src={currentImage.fileUrl}
+                    alt={currentImage.description ?? currentImage.name}
+                    className="h-full w-full object-cover"
+                    onError={() =>
+                      setFailedImageIds((currentIds) => {
+                        const nextIds = new Set(currentIds);
+
+                        nextIds.add(currentImage.id);
+
+                        return nextIds;
+                      })
+                    }
+                  />
+                )}
+
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent" />
+
+                <div className="absolute bottom-4 left-0 flex w-full justify-center px-4 md:bottom-6 md:px-8">
+                  <div className="w-full max-w-2xl rounded-lg bg-black/35 p-3 text-center backdrop-blur-sm md:p-4">
+                    <p className="text-xs font-semibold uppercase text-cyan-100">
+                      Imagen {safeCurrentIndex + 1} de {imageFiles.length}
+                    </p>
+                    <h2 className="mt-1 text-lg font-bold text-white md:text-2xl">
+                      {currentImage.name}
+                    </h2>
+                    {currentImage.description && (
+                      <p className="mt-2 text-xs leading-relaxed text-zinc-200 md:text-sm">
+                        {currentImage.description}
+                      </p>
+                    )}
+                    {uploadedDate && (
+                      <p className="mt-2 text-xs text-zinc-400">
+                        {uploadedDate}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          )}
 
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="absolute left-4 bottom-1/4 z-10 -translate-y-1/2 rounded-full bg-black/35 p-3 text-white backdrop-blur-sm transition hover:bg-black/50"
-            aria-label="Previous project"
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </button>
+          {hasMultipleImages && (
+            <>
+              <button
+                type="button"
+                onClick={handlePrev}
+                className="absolute left-4 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+                aria-label="Imagen anterior"
+              >
+                <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
 
-          <button
-            type="button"
-            onClick={handleNext}
-            className="absolute right-4 bottom-1/4 z-10 -translate-y-1/2 rounded-full bg-black/35 p-3 text-white backdrop-blur-sm transition hover:bg-black/50"
-            aria-label="Next project"
-          >
-            <ChevronRightIcon className="h-5 w-5" />
-          </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                className="absolute right-4 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+                aria-label="Imagen siguiente"
+              >
+                <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
 
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-2 py-2 bg-gradient-to-t from-purple-900/30 via-purple-500/10 to-transparent backdrop-blur-sm sm:px-4 md:px-6 lg:px-8">
-          <Technologies technologies={currentProject.technologies} />
-        </div>
+        {hasMultipleImages && (
+          <div className="flex items-center justify-center gap-2 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+            {imageFiles.map((file, index) => (
+              <button
+                key={file.id}
+                type="button"
+                onClick={() => {
+                  setDirection(index > safeCurrentIndex ? 1 : -1);
+                  setCurrentIndex(index);
+                }}
+                className={`h-2.5 rounded-full transition ${
+                  index === safeCurrentIndex
+                    ? 'w-8 bg-cyan-300'
+                    : 'w-2.5 bg-zinc-600 hover:bg-zinc-400'
+                }`}
+                aria-label={`Ver imagen ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

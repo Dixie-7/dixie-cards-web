@@ -4,15 +4,18 @@ import { mainCardTitle } from './constants/userCardEditorOptions';
 import LoginModal from './components/ui/Modal/LoginModal';
 import MusicPlayer from './components/ui/MusicPlayer/MusicPlayer';
 import ProjectsCarousel from './components/ui/Projects/ProjectsCarousel';
+import ProjectsCrudPanel from './components/ui/Projects/ProjectsCrudPanel';
 import MainCard from './components/ui/UserCards/MainCard';
 import UserCardsCrudPanel from './components/ui/UserCards/UserCardsCrudPanel';
 import { useAuth } from './hooks/useAuth';
+import { useProjectsCrud } from './hooks/useProjectsCrud';
 import { useUserCardsCrud } from './hooks/useUserCardsCrud';
+import { useUserFiles } from './hooks/useUserFiles';
 
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const loginButtonRef = useRef<HTMLButtonElement | null>(null);
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, token, user } = useAuth();
   const {
     cards,
     isLoading,
@@ -24,6 +27,19 @@ function App() {
     updateBlock,
     deleteBlock,
   } = useUserCardsCrud();
+  const {
+    projects,
+    isLoading: areProjectsLoading,
+    error: projectsError,
+    createProject,
+    updateProject,
+    deleteProject,
+  } = useProjectsCrud(token);
+  const {
+    imageFiles,
+    isLoading: areFilesLoading,
+    error: filesError,
+  } = useUserFiles(token);
   const mainCard = cards.find((card) => card.title === mainCardTitle);
   const portfolioCards = cards.filter(
     (card) => card.title !== mainCardTitle,
@@ -61,8 +77,22 @@ function App() {
       {mainCard && <MainCard card={mainCard} />}
 
       <section className="portfolio-stage">
-        <ProjectsCarousel />
+        <ProjectsCarousel
+          files={imageFiles}
+          isLoading={areFilesLoading}
+          error={filesError}
+        />
       </section>
+
+      <ProjectsCrudPanel
+        projects={projects}
+        isLoading={areProjectsLoading}
+        error={projectsError}
+        currentUserId={user?.id ?? 7}
+        onCreateProject={createProject}
+        onUpdateProject={updateProject}
+        onDeleteProject={deleteProject}
+      />
 
       <UserCardsCrudPanel
         cards={cards}
