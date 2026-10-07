@@ -20,6 +20,24 @@ export const projectsMock: ProjectDto[] = [
       showTechnologies: true,
       showProject: true,
     },
+    images: [
+      {
+        id: 1,
+        imageUrl:
+          'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80',
+        altText: 'Workspace principal del portfolio',
+        sortOrder: 1,
+        isCover: true,
+      },
+      {
+        id: 2,
+        imageUrl:
+          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
+        altText: 'Vista de dashboard del portfolio',
+        sortOrder: 2,
+        isCover: false,
+      },
+    ],
   },
   {
     id: 2,
@@ -40,6 +58,24 @@ export const projectsMock: ProjectDto[] = [
       showTechnologies: true,
       showProject: true,
     },
+    images: [
+      {
+        id: 3,
+        imageUrl:
+          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+        altText: 'Laptop con arquitectura de API',
+        sortOrder: 1,
+        isCover: true,
+      },
+      {
+        id: 4,
+        imageUrl:
+          'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80',
+        altText: 'Codigo de backend',
+        sortOrder: 2,
+        isCover: false,
+      },
+    ],
   },
   {
     id: 3,
@@ -60,5 +96,15 @@ export const projectsMock: ProjectDto[] = [
       showTechnologies: true,
       showProject: true,
     },
+    images: [
+      {
+        id: 5,
+        imageUrl:
+          'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80',
+        altText: 'Workspace musical',
+        sortOrder: 1,
+        isCover: true,
+      },
+    ],
   },
 ];

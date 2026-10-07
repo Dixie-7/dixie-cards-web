@@ -2,6 +2,7 @@ import { projectsMock } from '@/mocks/projects.mock';
 import type {
   ProjectDisplaySettingsDto,
   ProjectDto,
+  ProjectImageDto,
   ProjectPayload,
   ProjectStatus,
 } from '@/types/projects';
@@ -23,6 +24,7 @@ function cloneProjects(projects: ProjectDto[]) {
     displaySettings: project.displaySettings
       ? { ...project.displaySettings }
       : project.displaySettings,
+    images: project.images.map((image) => ({ ...image })),
   }));
 }
 
@@ -42,6 +44,17 @@ function getNextDisplaySettingsId() {
     Math.max(
       0,
       ...projectsStore.map((project) => project.displaySettings?.id ?? 0),
+    ) + 1
+  );
+}
+
+function getNextImageId() {
+  return (
+    Math.max(
+      0,
+      ...projectsStore.flatMap((project) =>
+        project.images.map((image) => image.id),
+      ),
     ) + 1
   );
 }
@@ -150,6 +163,42 @@ function normalizeDisplaySettings(
   };
 }
 
+function normalizeProjectImage(value: unknown): ProjectImageDto | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const id = readNumber(value, 'id', 'Id');
+  const imageUrl = readString(value, 'imageUrl', 'ImageUrl');
+  const sortOrder = readNumber(value, 'sortOrder', 'SortOrder') ?? 0;
+
+  if (id === undefined || !imageUrl) {
+    return undefined;
+  }
+
+  return {
+    id,
+    imageUrl,
+    altText: readNullableString(value, 'altText', 'AltText') ?? null,
+    sortOrder,
+    isCover: readBoolean(value, 'isCover', 'IsCover') ?? false,
+  };
+}
+
+function normalizeProjectImages(value: unknown): ProjectImageDto[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => normalizeProjectImage(item))
+    .filter((image): image is ProjectImageDto => Boolean(image))
+    .sort(
+      (currentImage, nextImage) =>
+        currentImage.sortOrder - nextImage.sortOrder,
+    );
+}
+
 function normalizeProject(value: unknown): ProjectDto | undefined {
   if (!isRecord(value)) {
     return undefined;
@@ -181,6 +230,7 @@ function normalizeProject(value: unknown): ProjectDto | undefined {
     displaySettings: normalizeDisplaySettings(
       readValue(value, 'displaySettings', 'DisplaySettings'),
     ),
+    images: normalizeProjectImages(readValue(value, 'images', 'Images')),
   };
 }
 
@@ -295,6 +345,18 @@ function createProjectFromPayload(id: number, payload: ProjectPayload): ProjectD
     collaborators: payload.collaborators ?? null,
     sortOrder: payload.sortOrder,
     displaySettings: createMockDisplaySettings(id, payload),
+    images: payload.images
+      .map((image, index) => ({
+        id: getNextImageId() + index,
+        imageUrl: image.imageUrl,
+        altText: image.altText ?? null,
+        sortOrder: image.sortOrder,
+        isCover: image.isCover,
+      }))
+      .sort(
+        (currentImage, nextImage) =>
+          currentImage.sortOrder - nextImage.sortOrder,
+      ),
   };
 }
 

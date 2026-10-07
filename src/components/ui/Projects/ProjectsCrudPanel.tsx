@@ -42,6 +42,14 @@ interface ProjectDraft {
   showIcons: boolean;
   showTechnologies: boolean;
   showProject: boolean;
+  images: ProjectImageDraft[];
+}
+
+interface ProjectImageDraft {
+  imageUrl: string;
+  altText: string;
+  sortOrder: number;
+  isCover: boolean;
 }
 
 const fieldClass =
@@ -56,8 +64,8 @@ const statusOptions = [
   { value: '3', label: 'Archivado' },
 ];
 
-function getNextSortOrder(projects: ProjectDto[]) {
-  return Math.max(0, ...projects.map((project) => project.sortOrder)) + 1;
+function getNextSortOrder(items: Array<{ sortOrder: number }>) {
+  return Math.max(0, ...items.map((item) => item.sortOrder)) + 1;
 }
 
 function getSafeSortOrder(sortOrder: number) {
@@ -91,6 +99,13 @@ function getDisplaySettings(project: ProjectDto) {
   };
 }
 
+function sortProjectImages(project: ProjectDto) {
+  return [...project.images].sort(
+    (currentImage, nextImage) =>
+      currentImage.sortOrder - nextImage.sortOrder,
+  );
+}
+
 function createEmptyProjectDraft(
   currentUserId: number,
   projects: ProjectDto[],
@@ -108,6 +123,7 @@ function createEmptyProjectDraft(
     showIcons: true,
     showTechnologies: true,
     showProject: true,
+    images: [],
   };
 }
 
@@ -124,6 +140,12 @@ function createProjectDraft(project: ProjectDto): ProjectDraft {
     collaborators: project.collaborators ?? '',
     sortOrder: project.sortOrder,
     ...displaySettings,
+    images: sortProjectImages(project).map((image) => ({
+      imageUrl: image.imageUrl,
+      altText: image.altText ?? '',
+      sortOrder: image.sortOrder,
+      isCover: image.isCover,
+    })),
   };
 }
 
@@ -140,6 +162,16 @@ function getProjectPayload(
   draft: ProjectDraft,
   project?: ProjectDto | null,
 ): ProjectPayload {
+  const images = draft.images
+    .map((image) => ({
+      imageUrl: image.imageUrl.trim(),
+      altText: image.altText.trim() || null,
+      sortOrder: getSafeSortOrder(Number(image.sortOrder)),
+      isCover: image.isCover,
+    }))
+    .filter((image) => image.imageUrl);
+  const hasCover = images.some((image) => image.isCover);
+
   return {
     userId: Number(draft.userId),
     name: draft.name.trim() || 'Untitled project',
@@ -159,6 +191,10 @@ function getProjectPayload(
       showTechnologies: draft.showTechnologies,
       showProject: draft.showProject,
     },
+    images: images.map((image, index) => ({
+      ...image,
+      isCover: hasCover ? image.isCover : index === 0,
+    })),
   };
 }
 
@@ -391,6 +427,64 @@ export default function ProjectsCrudPanel({
     setEditor(null);
     setDraft(createEmptyProjectDraft(currentUserId, sortedProjects));
     setMutationError('');
+  };
+
+  const addImageDraft = () => {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      images: [
+        ...currentDraft.images,
+        {
+          imageUrl: '',
+          altText: '',
+          sortOrder: getNextSortOrder(
+            currentDraft.images.map((image, index) => ({
+              sortOrder: image.sortOrder || index,
+            })),
+          ),
+          isCover: currentDraft.images.length === 0,
+        },
+      ],
+    }));
+  };
+
+  const updateImageDraft = (
+    imageIndex: number,
+    updater: (image: ProjectImageDraft) => ProjectImageDraft,
+  ) => {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      images: currentDraft.images.map((image, index) =>
+        index === imageIndex ? updater(image) : image,
+      ),
+    }));
+  };
+
+  const setCoverImageDraft = (imageIndex: number) => {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      images: currentDraft.images.map((image, index) => ({
+        ...image,
+        isCover: index === imageIndex,
+      })),
+    }));
+  };
+
+  const removeImageDraft = (imageIndex: number) => {
+    setDraft((currentDraft) => {
+      const nextImages = currentDraft.images.filter(
+        (_image, index) => index !== imageIndex,
+      );
+      const hasCover = nextImages.some((image) => image.isCover);
+
+      return {
+        ...currentDraft,
+        images: nextImages.map((image, index) => ({
+          ...image,
+          isCover: hasCover ? image.isCover : index === 0,
+        })),
+      };
+    });
   };
 
   const handleSaveProject = async (event: FormEvent<HTMLFormElement>) => {
@@ -694,6 +788,105 @@ export default function ProjectsCrudPanel({
                   }))
                 }
               />
+            </div>
+
+            <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-950 dark:text-white">
+                    Imagenes del proyecto
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    URLs de imagen para el carousel interno del proyecto.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addImageDraft}
+                  className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
+                >
+                  <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                  Agregar imagen
+                </button>
+              </div>
+
+              {draft.images.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                  Este proyecto todavia no tiene imagenes.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {draft.images.map((image, index) => (
+                    <div
+                      key={`${index}-${image.sortOrder}`}
+                      className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem_auto_auto]"
+                    >
+                      <label>
+                        <span className={labelClass}>ImageUrl</span>
+                        <input
+                          type="url"
+                          value={image.imageUrl}
+                          onChange={(event) =>
+                            updateImageDraft(index, (currentImage) => ({
+                              ...currentImage,
+                              imageUrl: event.target.value,
+                            }))
+                          }
+                          placeholder="https://..."
+                          className={fieldClass}
+                        />
+                      </label>
+                      <label>
+                        <span className={labelClass}>AltText</span>
+                        <input
+                          value={image.altText}
+                          onChange={(event) =>
+                            updateImageDraft(index, (currentImage) => ({
+                              ...currentImage,
+                              altText: event.target.value,
+                            }))
+                          }
+                          className={fieldClass}
+                        />
+                      </label>
+                      <label>
+                        <span className={labelClass}>Orden</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={image.sortOrder}
+                          onChange={(event) =>
+                            updateImageDraft(index, (currentImage) => ({
+                              ...currentImage,
+                              sortOrder: Number(event.target.value),
+                            }))
+                          }
+                          className={fieldClass}
+                        />
+                      </label>
+                      <label className="flex items-center gap-2 self-end rounded-lg border border-zinc-200 px-3 py-2 text-sm font-semibold text-zinc-700 dark:border-zinc-800 dark:text-zinc-200">
+                        <input
+                          type="radio"
+                          name="project-cover-image"
+                          checked={image.isCover}
+                          onChange={() => setCoverImageDraft(index)}
+                          className="h-4 w-4 accent-cyan-700"
+                        />
+                        Cover
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removeImageDraft(index)}
+                        className="inline-flex h-10 w-10 items-center justify-center self-end rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
+                        aria-label="Eliminar imagen"
+                        title="Eliminar imagen"
+                      >
+                        <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">

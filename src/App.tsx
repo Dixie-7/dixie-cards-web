@@ -10,7 +10,6 @@ import UserCardsCrudPanel from './components/ui/UserCards/UserCardsCrudPanel';
 import { useAuth } from './hooks/useAuth';
 import { useProjectsCrud } from './hooks/useProjectsCrud';
 import { useUserCardsCrud } from './hooks/useUserCardsCrud';
-import { useUserFiles } from './hooks/useUserFiles';
 
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -35,11 +34,6 @@ function App() {
     updateProject,
     deleteProject,
   } = useProjectsCrud(token);
-  const {
-    imageFiles,
-    isLoading: areFilesLoading,
-    error: filesError,
-  } = useUserFiles(token);
   const mainCard = cards.find((card) => card.title === mainCardTitle);
   const portfolioCards = cards.filter(
     (card) => card.title !== mainCardTitle,
@@ -78,9 +72,9 @@ function App() {
 
       <section className="portfolio-stage">
         <ProjectsCarousel
-          files={imageFiles}
-          isLoading={areFilesLoading}
-          error={filesError}
+          projects={projects}
+          isLoading={areProjectsLoading}
+          error={projectsError}
         />
       </section>
 

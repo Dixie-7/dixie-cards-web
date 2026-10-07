@@ -1,5 +1,20 @@
 export type ProjectStatus = number | string;
 
+export interface ProjectImageDto {
+  id: number;
+  imageUrl: string;
+  altText?: string | null;
+  sortOrder: number;
+  isCover: boolean;
+}
+
+export interface ProjectImageRequestDto {
+  imageUrl: string;
+  altText?: string | null;
+  sortOrder: number;
+  isCover: boolean;
+}
+
 export interface ProjectDisplaySettingsDto {
   id: number;
   projectId: number;
@@ -20,6 +35,7 @@ export interface ProjectDto {
   collaborators?: string | null;
   sortOrder: number;
   displaySettings?: ProjectDisplaySettingsDto | null;
+  images: ProjectImageDto[];
 }
 
 export interface ProjectDisplaySettingsPayload {
@@ -41,4 +57,5 @@ export interface ProjectPayload {
   collaborators?: string | null;
   sortOrder: number;
   displaySettings?: ProjectDisplaySettingsPayload | null;
+  images: ProjectImageRequestDto[];
 }
