@@ -75,8 +75,6 @@ export default function ProjectsCarousel({
   );
   const [projectIndex, setProjectIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
-  const [projectDirection, setProjectDirection] = useState<1 | -1>(1);
-  const [imageDirection, setImageDirection] = useState<1 | -1>(1);
   const [failedImageIds, setFailedImageIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -103,7 +101,6 @@ export default function ProjectsCarousel({
       return;
     }
 
-    setProjectDirection(1);
     setImageIndex(0);
     setProjectIndex(
       (currentIndex) =>
@@ -117,7 +114,6 @@ export default function ProjectsCarousel({
       return;
     }
 
-    setProjectDirection(-1);
     setImageIndex(0);
     setProjectIndex(
       (currentIndex) =>
@@ -133,7 +129,6 @@ export default function ProjectsCarousel({
       return;
     }
 
-    setImageDirection(1);
     setImageIndex(
       (currentIndex) =>
         (Math.min(currentIndex, projectImages.length - 1) + 1) %
@@ -146,7 +141,6 @@ export default function ProjectsCarousel({
       return;
     }
 
-    setImageDirection(-1);
     setImageIndex(
       (currentIndex) =>
         (Math.min(currentIndex, projectImages.length - 1) -
@@ -185,10 +179,10 @@ export default function ProjectsCarousel({
             <AnimatePresence mode="wait">
               <motion.article
                 key={currentProject.id}
-                initial={{ x: projectDirection > 0 ? 320 : -320, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: projectDirection > 0 ? -320 : 320, opacity: 0 }}
-                transition={{ duration: 0.18, ease: 'easeInOut' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
                 className="absolute inset-0 flex flex-col"
               >
                 <div className="relative h-72 w-full overflow-hidden sm:h-[360px] lg:h-[440px]">
@@ -198,16 +192,10 @@ export default function ProjectsCarousel({
                         key={currentImage.id}
                         src={currentImage.imageUrl}
                         alt={currentImage.altText ?? currentProject.name}
-                        initial={{
-                          x: imageDirection > 0 ? 160 : -160,
-                          opacity: 0,
-                        }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{
-                          x: imageDirection > 0 ? -160 : 160,
-                          opacity: 0,
-                        }}
-                        transition={{ duration: 0.15, ease: 'easeInOut' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={() =>
                           setFailedImageIds((currentIds) => {
@@ -235,6 +223,11 @@ export default function ProjectsCarousel({
                   )}
 
                   <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent" />
+                  <div className="absolute left-0 top-0 flex w-full justify-center bg-linear-to-b from-black/70 via-black/25 to-transparent px-5 pb-10 pt-5 text-center sm:px-8 sm:pt-6">
+                    <h2 className="max-w-3xl text-2xl font-bold leading-tight text-white drop-shadow-[0_3px_16px_rgba(0,0,0,0.85)] md:text-3xl">
+                      {currentProject.name}
+                    </h2>
+                  </div>
 
                   {hasMultipleImages && (
                     <>
@@ -272,19 +265,16 @@ export default function ProjectsCarousel({
                   )}
 
                   <div className="absolute bottom-4 left-0 flex w-full justify-center px-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-end gap-2">
                       {projectImages.map((image, index) => (
                         <button
                           key={image.id}
                           type="button"
-                          onClick={() => {
-                            setImageDirection(index > safeImageIndex ? 1 : -1);
-                            setImageIndex(index);
-                          }}
-                          className={`h-2.5 rounded-full transition ${
+                          onClick={() => setImageIndex(index)}
+                          className={`rounded-full transition ${
                             index === safeImageIndex
-                              ? 'w-8 bg-cyan-300'
-                              : 'w-2.5 bg-white/55 hover:bg-white'
+                              ? 'h-8 w-1.5 bg-cyan-300'
+                              : 'h-4 w-1.5 bg-white/55 hover:h-6 hover:bg-white'
                           }`}
                           aria-label={`Ver imagen ${index + 1} del proyecto`}
                         />
@@ -305,19 +295,14 @@ export default function ProjectsCarousel({
                     )}
                   </div>
 
-                  <div>
-                    <h2 className="text-2xl font-bold text-white md:text-3xl">
-                      {currentProject.name}
-                    </h2>
-                    {currentProject.description && (
-                      <p className="mt-3 text-sm leading-6 text-zinc-300 md:text-base md:leading-7">
-                        {currentProject.description}
-                      </p>
-                    )}
-                  </div>
+                  {currentProject.description && (
+                    <p className="text-center text-sm leading-6 text-zinc-300 md:text-base md:leading-7">
+                      {currentProject.description}
+                    </p>
+                  )}
 
                   {currentProject.collaborators && (
-                    <p className="text-sm font-medium text-zinc-300">
+                    <p className="text-center text-sm font-medium text-zinc-300">
                       Colaboradores:{' '}
                       <span className="text-zinc-100">
                         {currentProject.collaborators}
@@ -325,66 +310,56 @@ export default function ProjectsCarousel({
                     </p>
                   )}
 
-                  {currentSettings.showTechnologies && (
-                    <Technologies
-                      technologies={splitTechnologies(currentProject.technologies)}
-                      showIcons={currentSettings.showIcons}
-                    />
+                  {(currentSettings.showTechnologies || hasMultipleProjects) && (
+                    <div className="mx-auto grid w-full max-w-3xl items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                      <div className="flex justify-center">
+                        {hasMultipleProjects && (
+                          <motion.button
+                            type="button"
+                            onClick={showPreviousProject}
+                            whileHover={{ x: -2, y: -1 }}
+                            whileTap={{ scale: 0.96 }}
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cyan-300/20 bg-zinc-900/80 px-2.5 text-[0.68rem] font-bold uppercase tracking-normal text-cyan-100 shadow-sm shadow-black/20 transition hover:border-cyan-200/70 hover:bg-cyan-950 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+                            aria-label="Proyecto anterior"
+                          >
+                            <ChevronLeftIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Prev</span>
+                          </motion.button>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        {currentSettings.showTechnologies && (
+                          <Technologies
+                            technologies={splitTechnologies(currentProject.technologies)}
+                            showIcons={currentSettings.showIcons}
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex justify-center">
+                        {hasMultipleProjects && (
+                          <motion.button
+                            type="button"
+                            onClick={showNextProject}
+                            whileHover={{ x: 2, y: -1 }}
+                            whileTap={{ scale: 0.96 }}
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cyan-300/20 bg-zinc-900/80 px-2.5 text-[0.68rem] font-bold uppercase tracking-normal text-cyan-100 shadow-sm shadow-black/20 transition hover:border-cyan-200/70 hover:bg-cyan-950 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+                            aria-label="Proyecto siguiente"
+                          >
+                            <span>Next</span>
+                            <ChevronRightIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
                   )}
+
                 </div>
               </motion.article>
             </AnimatePresence>
           )}
-
-          {hasMultipleProjects && (
-            <>
-              <motion.button
-                type="button"
-                onClick={showPreviousProject}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="absolute left-4 top-5 z-20 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-xs font-semibold uppercase text-white shadow-lg shadow-black/30 backdrop-blur-sm transition hover:border-cyan-300/50 hover:bg-cyan-900/75 hover:text-cyan-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
-                aria-label="Proyecto anterior"
-              >
-                <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
-                <span>Previous</span>
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={showNextProject}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="absolute right-4 top-5 z-20 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-xs font-semibold uppercase text-white shadow-lg shadow-black/30 backdrop-blur-sm transition hover:border-cyan-300/50 hover:bg-cyan-900/75 hover:text-cyan-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
-                aria-label="Proyecto siguiente"
-              >
-                <span>Next</span>
-                <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
-              </motion.button>
-            </>
-          )}
         </div>
-
-        {hasMultipleProjects && (
-          <div className="flex items-center justify-center gap-2 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
-            {visibleProjects.map((project, index) => (
-              <button
-                key={project.id}
-                type="button"
-                onClick={() => {
-                  setProjectDirection(index > safeProjectIndex ? 1 : -1);
-                  setProjectIndex(index);
-                  setImageIndex(0);
-                }}
-                className={`h-2.5 rounded-full transition ${
-                  index === safeProjectIndex
-                    ? 'w-8 bg-cyan-300'
-                    : 'w-2.5 bg-zinc-600 hover:bg-zinc-400'
-                }`}
-                aria-label={`Ver proyecto ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );

@@ -46,6 +46,7 @@ import UserCardsSection from './UserCardsSection';
 interface UserCardsCrudPanelProps {
   cards: UserCardDto[];
   displayCards: UserCardDto[];
+  isEditMode: boolean;
   isLoading: boolean;
   error: string | null;
   onCreateCard: (payload: UserCardPayload) => Promise<UserCardDto>;
@@ -539,6 +540,7 @@ function EditorActions({
 export default function UserCardsCrudPanel({
   cards,
   displayCards,
+  isEditMode,
   isLoading,
   error,
   onCreateCard,
@@ -555,7 +557,6 @@ export default function UserCardsCrudPanel({
       ),
     [cards],
   );
-  const [isEditMode, setIsEditMode] = useState(false);
   const [cardEditor, setCardEditor] = useState<CardEditor | null>(null);
   const [blockEditor, setBlockEditor] = useState<BlockEditor | null>(null);
   const [cardDraft, setCardDraft] = useState<CardDraft>(() =>
@@ -619,7 +620,6 @@ export default function UserCardsCrudPanel({
     return card;
   });
   const openCreateCard = () => {
-    setIsEditMode(true);
     setCardEditor({ mode: 'create' });
     setBlockEditor(null);
     setCardDraft(createEmptyCardDraft(sortedCards));
@@ -629,7 +629,6 @@ export default function UserCardsCrudPanel({
   const openEditCard = (card: UserCardDto) => {
     const sourceCard = sortedCards.find((candidate) => candidate.id === card.id) ?? card;
 
-    setIsEditMode(true);
     setCardEditor({ mode: 'edit', cardId: sourceCard.id });
     setBlockEditor(null);
     setCardDraft(createCardDraft(sourceCard));
@@ -644,7 +643,6 @@ export default function UserCardsCrudPanel({
   const openCreateBlock = (card: UserCardDto) => {
     const sourceCard = sortedCards.find((candidate) => candidate.id === card.id) ?? card;
 
-    setIsEditMode(true);
     setCardEditor(null);
     setBlockEditor({ mode: 'create', cardId: sourceCard.id });
     setBlockDraft(createEmptyBlockDraft(sourceCard.blocks));
@@ -660,7 +658,6 @@ export default function UserCardsCrudPanel({
     const sourceBlock =
       sourceCard.blocks.find((candidate) => candidate.id === block.id) ?? block;
 
-    setIsEditMode(true);
     setCardEditor(null);
     setBlockEditor({
       mode: 'edit',
@@ -826,6 +823,10 @@ export default function UserCardsCrudPanel({
   const closeFloatingEditor =
     cardEditor !== null ? closeCardEditor : closeBlockEditor;
 
+  if (!isEditMode) {
+    return <UserCardsSection cards={displayCards} />;
+  }
+
   return (
     <>
       <section className="w-full px-4 py-8">
@@ -842,29 +843,12 @@ export default function UserCardsCrudPanel({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsEditMode((currentMode) => !currentMode);
-                  setCardEditor(null);
-                  setBlockEditor(null);
-                }}
-                className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                  isEditMode
-                    ? 'bg-cyan-700 text-white hover:bg-cyan-600'
-                    : 'border border-zinc-200 bg-white text-zinc-700 hover:border-cyan-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200'
-                }`}
+                onClick={openCreateCard}
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100"
               >
-                {isEditMode ? 'Exit edit mode' : 'Edit mode'}
+                <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                Create card
               </button>
-              {isEditMode && (
-                <button
-                  type="button"
-                  onClick={openCreateCard}
-                  className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100"
-                >
-                  <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                  Create card
-                </button>
-              )}
             </div>
           </div>
 
@@ -888,7 +872,7 @@ export default function UserCardsCrudPanel({
         </div>
       </section>
 
-      {isEditMode && cardEditor?.mode === 'create' && cardPreview && (
+      {cardEditor?.mode === 'create' && cardPreview && (
         <section className="w-full px-4 pb-8">
           <div className="mx-auto max-w-5xl">
             <div className="-m-2.5 mb-2 flex flex-wrap">
@@ -903,19 +887,15 @@ export default function UserCardsCrudPanel({
         </section>
       )}
 
-      {isEditMode ? (
-        <UserCardsEditSection
-          cards={editModeCards}
-          activeCardId={activeCardId}
-          onEditCard={openEditCard}
-          onDeleteCard={(card) => void handleDeleteCard(card)}
-          onAddBlock={openCreateBlock}
-          onEditBlock={openEditBlock}
-          onDeleteBlock={(card, block) => void handleDeleteBlock(card, block)}
-        />
-      ) : (
-        <UserCardsSection cards={displayCards} />
-      )}
+      <UserCardsEditSection
+        cards={editModeCards}
+        activeCardId={activeCardId}
+        onEditCard={openEditCard}
+        onDeleteCard={(card) => void handleDeleteCard(card)}
+        onAddBlock={openCreateBlock}
+        onEditBlock={openEditBlock}
+        onDeleteBlock={(card, block) => void handleDeleteBlock(card, block)}
+      />
 
       {floatingEditorContent && (
         <FloatingEditorWindow
