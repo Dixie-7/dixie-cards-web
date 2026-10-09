@@ -14,15 +14,32 @@ import {
   type FormEvent,
   type SVGProps,
 } from 'react';
+import {
+  defaultUserConfigPayload,
+  type UserConfigPayload,
+} from '@/types/userConfig';
 import type { UserContactDto } from '@/types/userContact';
 
 interface ContactSectionProps {
   contact: UserContactDto | null;
   isLoading?: boolean;
   error?: string | null;
+  visibility?: ContactVisibilityConfig;
 }
 
 type ContactIcon = ComponentType<SVGProps<SVGSVGElement>>;
+type ContactVisibilityConfig = Pick<
+  UserConfigPayload,
+  | 'showEmail'
+  | 'showAltEmail'
+  | 'showPhone'
+  | 'showAltPhone'
+  | 'showInstagram'
+  | 'showGitHub'
+  | 'showFacebook'
+  | 'showLinkedIn'
+  | 'showWebsite'
+>;
 
 interface ContactLink {
   id: string;
@@ -83,12 +100,23 @@ function getPhoneHref(phone: string) {
   return `tel:${phone.replace(/[^\d+]/g, '')}`;
 }
 
-function getPrimaryEmail(contact: UserContactDto | null) {
+function getPrimaryEmail(
+  contact: UserContactDto | null,
+  visibility: ContactVisibilityConfig,
+) {
   if (!contact) {
     return null;
   }
 
-  return contact.publicEmail?.trim() || contact.altEmail?.trim() || null;
+  if (visibility.showEmail && contact.publicEmail?.trim()) {
+    return contact.publicEmail.trim();
+  }
+
+  if (visibility.showAltEmail && contact.altEmail?.trim()) {
+    return contact.altEmail.trim();
+  }
+
+  return null;
 }
 
 function createMailtoHref(targetEmail: string, draft: MailDraft) {
@@ -108,14 +136,17 @@ function createMailtoHref(targetEmail: string, draft: MailDraft) {
   return `mailto:${targetEmail}?${params.toString()}`;
 }
 
-function createContactLinks(contact: UserContactDto | null): ContactLink[] {
+function createContactLinks(
+  contact: UserContactDto | null,
+  visibility: ContactVisibilityConfig,
+): ContactLink[] {
   if (!contact) {
     return [];
   }
 
   const links: ContactLink[] = [];
 
-  if (hasText(contact.publicEmail)) {
+  if (visibility.showEmail && hasText(contact.publicEmail)) {
     links.push({
       id: 'publicEmail',
       label: 'Email publico',
@@ -125,7 +156,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.altEmail)) {
+  if (visibility.showAltEmail && hasText(contact.altEmail)) {
     links.push({
       id: 'altEmail',
       label: 'Email alternativo',
@@ -135,7 +166,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.phone)) {
+  if (visibility.showPhone && hasText(contact.phone)) {
     links.push({
       id: 'phone',
       label: 'Telefono',
@@ -145,7 +176,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.altPhone)) {
+  if (visibility.showAltPhone && hasText(contact.altPhone)) {
     links.push({
       id: 'altPhone',
       label: 'Telefono alternativo',
@@ -155,7 +186,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.site)) {
+  if (visibility.showWebsite && hasText(contact.site)) {
     links.push({
       id: 'site',
       label: 'Sitio',
@@ -165,7 +196,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.instagram)) {
+  if (visibility.showInstagram && hasText(contact.instagram)) {
     links.push({
       id: 'instagram',
       label: 'Instagram',
@@ -175,7 +206,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.gitHub)) {
+  if (visibility.showGitHub && hasText(contact.gitHub)) {
     links.push({
       id: 'gitHub',
       label: 'GitHub',
@@ -185,7 +216,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.facebook)) {
+  if (visibility.showFacebook && hasText(contact.facebook)) {
     links.push({
       id: 'facebook',
       label: 'Facebook',
@@ -195,7 +226,7 @@ function createContactLinks(contact: UserContactDto | null): ContactLink[] {
     });
   }
 
-  if (hasText(contact.linkedIn)) {
+  if (visibility.showLinkedIn && hasText(contact.linkedIn)) {
     links.push({
       id: 'linkedIn',
       label: 'LinkedIn',
@@ -238,9 +269,13 @@ export default function ContactSection({
   contact,
   isLoading = false,
   error = null,
+  visibility = defaultUserConfigPayload,
 }: ContactSectionProps) {
-  const contactLinks = useMemo(() => createContactLinks(contact), [contact]);
-  const targetEmail = getPrimaryEmail(contact);
+  const contactLinks = useMemo(
+    () => createContactLinks(contact, visibility),
+    [contact, visibility],
+  );
+  const targetEmail = getPrimaryEmail(contact, visibility);
   const [mailDraft, setMailDraft] = useState<MailDraft>({
     senderEmail: '',
     subject: '',

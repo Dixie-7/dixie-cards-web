@@ -14,6 +14,7 @@ import {
   SparklesIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { motion } from 'motion/react';
 import ReactPlayer from 'react-player';
 import type { ReactNode } from 'react';
 import type { UserCardBlockDto } from '@/types/userCards';
@@ -75,7 +76,7 @@ const defaultListItem =
 const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   default: {
     article: 'border-t border-zinc-200 py-5 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -94,7 +95,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   featured: {
     article:
       'rounded-lg border border-cyan-100 bg-cyan-50/60 p-4 dark:border-cyan-400/15 dark:bg-cyan-400/10',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -112,7 +113,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   },
   wide: {
     article: 'border-t border-zinc-200 py-5 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -130,7 +131,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   },
   compact: {
     article: 'border-t border-zinc-200 pt-4 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -149,7 +150,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   highlight: {
     article:
       'rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-400/20 dark:bg-emerald-400/10',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -167,7 +168,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   },
   split: {
     article: 'border-t border-zinc-200 py-5 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -185,7 +186,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   },
   main: {
     article: 'border-t border-zinc-200 py-6 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -203,7 +204,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   },
   'main-wide': {
     article: 'border-t border-zinc-200 py-6 first:border-t-0 first:pt-0 dark:border-zinc-800',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -222,7 +223,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
   'main-highlight': {
     article:
       'rounded-lg border border-blue-200 bg-blue-50 p-5 dark:border-blue-400/20 dark:bg-blue-400/10',
-    header: 'mb-3 flex items-center gap-3 text-left',
+    header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
     showEyebrow: true,
@@ -346,9 +347,13 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
           {actions}
         </div>
       )}
-      <article
+      <motion.article
         className={`w-full ${templateStyles.article} ${styleText}`}
         style={customColorStyles.rootStyle}
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.22 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         {templateStyles.showHeader && hasHeaderContent && (
           <div className={`${templateStyles.header} w-full`} data-block-header>
@@ -471,7 +476,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
               {block.content}
             </p>
           )}
-      </article>
+      </motion.article>
     </div>
   );
 }

@@ -78,6 +78,42 @@ type BlockEditor =
   | { mode: 'edit'; cardId: number; blockId: number };
 type EditorSectionIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
+const styleOptionGroupLabels: Record<string, string> = {
+  accent: 'Acento',
+  blockSpacing: 'Espacio vertical entre blocks',
+  blockSpacingX: 'Espacio horizontal entre blocks',
+  contentAlign: 'Alineacion de contenido',
+  contentPaddingX: 'Padding horizontal del contenido',
+  contentPaddingY: 'Padding vertical del contenido',
+  contentSize: 'Tamano del contenido',
+  contentSpacing: 'Margen del contenido',
+  contentWeight: 'Grosor del contenido',
+  descriptionPaddingX: 'Padding horizontal de descripcion',
+  descriptionPaddingY: 'Padding vertical de descripcion',
+  descriptionSpacing: 'Margen de descripcion',
+  headerSpacing: 'Margen del header',
+  height: 'Altura',
+  horizontalPosition: 'Posicion horizontal',
+  margin: 'Margen general',
+  marginBottom: 'Margen inferior',
+  marginTop: 'Margen superior',
+  opacity: 'Opacidad',
+  overflow: 'Overflow',
+  radius: 'Radio y forma',
+  shadow: 'Sombra',
+  spacingX: 'Padding horizontal',
+  spacingY: 'Padding vertical',
+  surface: 'Fondo',
+  textAlign: 'Alineacion de texto',
+  titleAlign: 'Alineacion del titulo',
+  titlePaddingX: 'Padding horizontal del titulo',
+  titlePaddingY: 'Padding vertical del titulo',
+  titleSize: 'Tamano del titulo',
+  titleSpacing: 'Margen del titulo',
+  titleWeight: 'Grosor del titulo',
+  verticalPosition: 'Posicion vertical',
+};
+
 const fieldClass =
   'w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white';
 const labelClass =
@@ -479,8 +515,8 @@ function StyleOptionSelector({
     <div className="space-y-3">
       {Object.entries(groupedOptions).map(([group, groupOptions]) => (
         <div key={group}>
-          <p className="mb-1.5 text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">
-            {group}
+          <p className="mb-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            {styleOptionGroupLabels[group] ?? group}
           </p>
           <div className="flex flex-wrap gap-2">
             {groupOptions.map((option) => {
