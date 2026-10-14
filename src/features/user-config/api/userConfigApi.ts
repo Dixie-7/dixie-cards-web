@@ -7,15 +7,14 @@ import {
 import {
   apiClient,
   getResponseMessage,
-  hasApiBaseUrl,
+  isMockEnabled,
 } from '@/shared/api/apiClient';
 
 const userConfigEndpoint =
-  import.meta.env.VITE_USER_CONFIG_ENDPOINT?.trim() || '/api/userconfig';
+  import.meta.env.VITE_USER_CONFIG_ENDPOINT?.trim() || '/api/user-config';
 
 export const isMockUserConfigEnabled =
-  import.meta.env.VITE_USE_MOCK_USER_CONFIG !== 'false' ||
-  !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_USER_CONFIG');
 
 let userConfigStore: UserConfigDto = cloneConfig(userConfigMock);
 
@@ -251,14 +250,12 @@ async function getUserConfigWithApi(token?: string | null, userId = 7) {
 }
 
 async function updateUserConfigWithApi(
-  configId: number,
+  _configId: number,
   payload: UserConfigPayload,
   token?: string | null,
   userId = 7,
 ) {
-  const path =
-    configId > 0 ? `${userConfigEndpoint}/${configId}` : userConfigEndpoint;
-  const { data: jsonResponse } = await apiClient.request(path, {
+  const { data: jsonResponse } = await apiClient.request(userConfigEndpoint, {
     method: 'PUT',
     body: payload,
     token,
@@ -266,7 +263,7 @@ async function updateUserConfigWithApi(
   const config = normalizeUserConfigResponse(jsonResponse, userId);
 
   if (!config) {
-    return createUserConfigFromPayload(configId, userId, payload);
+    return createUserConfigFromPayload(_configId, userId, payload);
   }
 
   return config;

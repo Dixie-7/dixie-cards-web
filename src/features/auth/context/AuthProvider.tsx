@@ -6,8 +6,13 @@ import {
   getStoredAuthSession,
   saveAuthSession,
 } from '@/features/auth/services/authSession';
-import type { AuthSession, LoginRequestDto } from '@/features/auth/types/auth.types';
-import type { RegisterRequestDto } from '@/features/auth/types/auth.types';
+import type {
+  AuthSession,
+  LoginRequestDto,
+  ResendVerificationRequestDto,
+  RegisterRequestDto,
+  VerifyEmailRequestDto,
+} from '@/features/auth/types/auth.types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -68,6 +73,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const verifyEmail = useCallback(async (payload: VerifyEmailRequestDto) => {
+    setIsLoading(true);
+
+    try {
+      const result = await authApi.verifyEmail(payload);
+
+      if (!result.success) {
+        throw new Error(result.message ?? 'No se pudo verificar el email.');
+      }
+
+      return result.message;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const resendVerification = useCallback(
+    async (payload: ResendVerificationRequestDto) => {
+      setIsLoading(true);
+
+      try {
+        const result = await authApi.resendVerification(payload);
+
+        if (!result.success) {
+          throw new Error(
+            result.message ?? 'No se pudo reenviar la verificacion.',
+          );
+        }
+
+        return result.message;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     clearAuthSession();
     setSession(null);
@@ -81,9 +123,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isLoading,
       login,
       register,
+      resendVerification,
+      verifyEmail,
       logout,
     }),
-    [isLoading, login, logout, register, session],
+    [
+      isLoading,
+      login,
+      logout,
+      register,
+      resendVerification,
+      session,
+      verifyEmail,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,15 +3,14 @@ import type { UserContactDto, UserContactPayload } from '@/features/contact/type
 import {
   apiClient,
   getResponseMessage,
-  hasApiBaseUrl,
+  isMockEnabled,
 } from '@/shared/api/apiClient';
 
 const userContactEndpoint =
-  import.meta.env.VITE_USER_CONTACT_ENDPOINT?.trim() || '/api/usercontact';
+  import.meta.env.VITE_USER_CONTACT_ENDPOINT?.trim() || '/api/user-contact';
 
 export const isMockUserContactEnabled =
-  import.meta.env.VITE_USE_MOCK_USER_CONTACT !== 'false' ||
-  !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_USER_CONTACT');
 
 let userContactStore: UserContactDto | null = cloneContact(userContactMock);
 
@@ -229,7 +228,7 @@ async function createUserContactWithApi(
   userId = 0,
 ) {
   const { data: jsonResponse } = await apiClient.request(userContactEndpoint, {
-    method: 'POST',
+    method: 'PUT',
     body: payload,
     token,
   });
@@ -243,34 +242,42 @@ async function createUserContactWithApi(
 }
 
 async function updateUserContactWithApi(
-  contactId: number,
+  _contactId: number,
   payload: UserContactPayload,
   token?: string | null,
   userId = 0,
 ) {
-  const { data: jsonResponse } = await apiClient.request(
-    `${userContactEndpoint}/${contactId}`,
-    {
-      method: 'PUT',
-      body: payload,
-      token,
-    },
-  );
+  const { data: jsonResponse } = await apiClient.request(userContactEndpoint, {
+    method: 'PUT',
+    body: payload,
+    token,
+  });
   const contact = normalizeUserContactResponse(jsonResponse);
 
   if (contact === undefined || contact === null) {
-    return createContactFromPayload(contactId, userId, payload);
+    return createContactFromPayload(_contactId, userId, payload);
   }
 
   return contact;
 }
 
 async function deleteUserContactWithApi(
-  contactId: number,
+  _contactId: number,
   token?: string | null,
 ) {
-  await apiClient.request(`${userContactEndpoint}/${contactId}`, {
-    method: 'DELETE',
+  await apiClient.request(userContactEndpoint, {
+    method: 'PUT',
+    body: {
+      publicEmail: null,
+      altEmail: null,
+      phone: null,
+      altPhone: null,
+      site: null,
+      instagram: null,
+      gitHub: null,
+      facebook: null,
+      linkedIn: null,
+    } satisfies UserContactPayload,
     token,
   });
 }

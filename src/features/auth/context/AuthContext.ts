@@ -2,7 +2,9 @@ import { createContext } from 'react';
 import type {
   AuthenticatedUserDto,
   LoginRequestDto,
+  ResendVerificationRequestDto,
   RegisterRequestDto,
+  VerifyEmailRequestDto,
 } from '@/features/auth/types/auth.types';
 
 export interface AuthContextValue {
@@ -12,6 +14,10 @@ export interface AuthContextValue {
   isLoading: boolean;
   login: (credentials: LoginRequestDto) => Promise<void>;
   register: (credentials: RegisterRequestDto) => Promise<string | undefined>;
+  resendVerification: (
+    payload: ResendVerificationRequestDto,
+  ) => Promise<string | undefined>;
+  verifyEmail: (payload: VerifyEmailRequestDto) => Promise<string | undefined>;
   logout: () => void;
 }
 

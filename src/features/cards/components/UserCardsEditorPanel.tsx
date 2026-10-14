@@ -144,7 +144,6 @@ function getSafeSortOrder(sortOrder: number) {
 
 function createEmptyCardDraft(cards: UserCardDto[]): CardDraft {
   return {
-    userId: 7,
     title: 'New portfolio card',
     description: '',
     template: 'default',
@@ -156,7 +155,6 @@ function createEmptyCardDraft(cards: UserCardDto[]): CardDraft {
 
 function createCardDraft(card: UserCardDto): CardDraft {
   return {
-    userId: card.userId,
     title: card.title,
     description: card.description ?? '',
     template: card.template ?? 'default',
@@ -198,7 +196,6 @@ function createBlockDraft(block: UserCardBlockDto): BlockDraft {
 
 function getCardPayload(draft: CardDraft): UserCardPayload {
   return {
-    userId: Number(draft.userId),
     title: draft.title.trim() || 'Untitled card',
     description: draft.description?.trim() || null,
     template: draft.template?.trim() || 'default',
@@ -231,6 +228,7 @@ function createPreviewCard(
   return {
     ...getCardPayload(draft),
     id,
+    userId: 0,
     blocks,
   };
 }
@@ -973,20 +971,6 @@ function CardFields({
                 onChange((currentDraft) => ({
                   ...currentDraft,
                   title: event.target.value,
-                }))
-              }
-              className={fieldClass}
-            />
-          </label>
-          <label>
-            <span className={labelClass}>UserId</span>
-            <input
-              type="number"
-              value={draft.userId}
-              onChange={(event) =>
-                onChange((currentDraft) => ({
-                  ...currentDraft,
-                  userId: Number(event.target.value),
                 }))
               }
               className={fieldClass}

@@ -39,7 +39,7 @@ function PortfolioPage() {
     createBlock,
     updateBlock,
     deleteBlock,
-  } = useUserCards();
+  } = useUserCards(token);
   const {
     projects,
     isLoading: areProjectsLoading,
@@ -85,7 +85,8 @@ function PortfolioPage() {
   const userLabel = user?.username ?? user?.email;
 
   return (
-    <main id="home" className="app-shell">
+    <main id="home" className="app-shell"> 
+  
       <FloatingNavbar
         isAuthenticated={isAuthenticated}
         isEditMode={isEditMode}
@@ -116,7 +117,6 @@ function PortfolioPage() {
             projects={projects}
             isLoading={areProjectsLoading}
             error={projectsError}
-            currentUserId={user?.id ?? 7}
             onCreateProject={createProject}
             onUpdateProject={updateProject}
             onDeleteProject={deleteProject}

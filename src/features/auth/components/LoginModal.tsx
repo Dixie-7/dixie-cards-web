@@ -17,6 +17,7 @@ import BaseModal from '@/shared/components/Modal/BaseModal';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: AuthMode;
   restoreFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
@@ -53,10 +54,11 @@ function validateRegisterForm(
 const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
+  initialMode = 'login',
   restoreFocusRef,
 }) => {
   const { isLoading, login, register } = useAuth();
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerUsername, setRegisterUsername] = useState('');
@@ -93,7 +95,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const handleClose = () => {
     clearPasswords();
     clearFeedback();
-    setMode('login');
+    setMode(initialMode);
     onClose();
   };
 

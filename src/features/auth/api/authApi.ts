@@ -1,30 +1,35 @@
 import { authUsersMock } from '@/features/auth/mocks/auth.mock';
 import type { MockAuthUser } from '@/features/auth/mocks/auth.mock';
 import type {
+  AuthActionResultDto,
   AuthErrorCode,
   LoginRequestDto,
   LoginResponseDto,
   LoginResultDto,
+  ResendVerificationRequestDto,
   RegisterRequestDto,
   RegisterResponseDto,
   RegisterResultDto,
+  VerifyEmailRequestDto,
 } from '@/features/auth/types/auth.types';
 import {
   hasValidationErrors,
   validateLoginRequest,
   validateRegisterRequest,
 } from '@/features/auth/services/authValidation';
-import { apiClient, hasApiBaseUrl } from '@/shared/api/apiClient';
+import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
 const authEndpoints = {
-  login: '/api/auth/login',
-  register: '/api/auth/register',
+  login: '/api/Auth/login',
+  register: '/api/Auth/register',
+  resendVerification: '/api/Auth/resend-verification',
+  verifyEmail: '/api/Auth/verify-email',
 };
 
 let authUsersStore: MockAuthUser[] = authUsersMock.map((user) => ({ ...user }));
 
 export const isMockAuthEnabled =
-  import.meta.env.VITE_USE_MOCK_AUTH !== 'false' || !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_AUTH');
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -158,6 +163,24 @@ function normalizeRegisterResult(value: unknown): RegisterResultDto | undefined 
     errorCode: normalizeErrorCode(readString(value, 'errorCode', 'ErrorCode')),
     message: readString(value, 'message', 'Message'),
     data: normalizeRegisterResponse(value.data ?? value.Data),
+  };
+}
+
+function normalizeAuthActionResult(value: unknown): AuthActionResultDto | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const success = readBoolean(value, 'success', 'Success');
+
+  if (success === undefined) {
+    return undefined;
+  }
+
+  return {
+    success,
+    errorCode: normalizeErrorCode(readString(value, 'errorCode', 'ErrorCode')),
+    message: readString(value, 'message', 'Message'),
   };
 }
 
@@ -355,6 +378,24 @@ async function registerWithMock(
   };
 }
 
+async function verifyEmailWithMock(): Promise<AuthActionResultDto> {
+  await simulateAuthLatency();
+
+  return {
+    success: true,
+    message: 'Email verificado.',
+  };
+}
+
+async function resendVerificationWithMock(): Promise<AuthActionResultDto> {
+  await simulateAuthLatency();
+
+  return {
+    success: true,
+    message: 'Reenviamos el correo de verificacion.',
+  };
+}
+
 async function loginWithApi(
   payload: LoginRequestDto,
 ): Promise<LoginResultDto> {
@@ -374,6 +415,16 @@ async function loginWithApi(
 
     if (result) {
       return result;
+    }
+
+    const data = normalizeLoginResponse(response.data);
+
+    if (response.ok && data) {
+      return {
+        success: true,
+        message: 'Login exitoso.',
+        data,
+      };
     }
 
     if (!response.ok) {
@@ -453,6 +504,68 @@ async function registerWithApi(
   }
 }
 
+async function verifyEmailWithApi(
+  payload: VerifyEmailRequestDto,
+): Promise<AuthActionResultDto> {
+  try {
+    const response = await apiClient.request(authEndpoints.verifyEmail, {
+      method: 'POST',
+      body: payload,
+      throwOnHttpError: false,
+    });
+    const result = normalizeAuthActionResult(response.data);
+
+    if (result) {
+      return result;
+    }
+
+    return {
+      success: response.ok,
+      errorCode: response.ok ? undefined : 'UNEXPECTED_ERROR',
+      message: response.ok
+        ? 'Email verificado.'
+        : `No se pudo verificar el email. Estado HTTP ${response.status}.`,
+    };
+  } catch {
+    return {
+      success: false,
+      errorCode: 'UNEXPECTED_ERROR',
+      message: 'No se pudo conectar con el servidor de autenticacion.',
+    };
+  }
+}
+
+async function resendVerificationWithApi(
+  payload: ResendVerificationRequestDto,
+): Promise<AuthActionResultDto> {
+  try {
+    const response = await apiClient.request(authEndpoints.resendVerification, {
+      method: 'POST',
+      body: payload,
+      throwOnHttpError: false,
+    });
+    const result = normalizeAuthActionResult(response.data);
+
+    if (result) {
+      return result;
+    }
+
+    return {
+      success: response.ok,
+      errorCode: response.status === 429 ? 'RATE_LIMITED' : 'UNEXPECTED_ERROR',
+      message: response.ok
+        ? 'Reenviamos el correo de verificacion.'
+        : `No se pudo reenviar la verificacion. Estado HTTP ${response.status}.`,
+    };
+  } catch {
+    return {
+      success: false,
+      errorCode: 'UNEXPECTED_ERROR',
+      message: 'No se pudo conectar con el servidor de autenticacion.',
+    };
+  }
+}
+
 export const authApi = {
   login(payload: LoginRequestDto) {
     return isMockAuthEnabled ? loginWithMock(payload) : loginWithApi(payload);
@@ -462,5 +575,17 @@ export const authApi = {
     return isMockAuthEnabled
       ? registerWithMock(payload)
       : registerWithApi(payload);
+  },
+
+  verifyEmail(payload: VerifyEmailRequestDto) {
+    return isMockAuthEnabled
+      ? verifyEmailWithMock()
+      : verifyEmailWithApi(payload);
+  },
+
+  resendVerification(payload: ResendVerificationRequestDto) {
+    return isMockAuthEnabled
+      ? resendVerificationWithMock()
+      : resendVerificationWithApi(payload);
   },
 };

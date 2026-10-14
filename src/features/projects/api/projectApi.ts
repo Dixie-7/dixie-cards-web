@@ -6,13 +6,14 @@ import type {
   ProjectPayload,
   ProjectStatus,
 } from '@/features/projects/types/project.types';
-import { apiClient, hasApiBaseUrl } from '@/shared/api/apiClient';
+import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
 const projectsEndpoint =
-  import.meta.env.VITE_PROJECTS_ENDPOINT?.trim() || '/api/projects';
+  import.meta.env.VITE_PROJECTS_ENDPOINT?.trim() || '/api/Projects';
+const defaultMockUserId = 7;
 
 export const isMockProjectsEnabled =
-  import.meta.env.VITE_USE_MOCK_PROJECTS !== 'false' || !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_PROJECTS');
 
 let projectsStore: ProjectDto[] = cloneProjects(projectsMock);
 
@@ -210,13 +211,13 @@ function normalizeProject(value: unknown): ProjectDto | undefined {
   const status = readProjectStatus(value);
   const sortOrder = readNumber(value, 'sortOrder', 'SortOrder') ?? 0;
 
-  if (id === undefined || userId === undefined || !name || status === undefined) {
+  if (id === undefined || !name || status === undefined) {
     return undefined;
   }
 
   return {
     id,
-    userId,
+    userId: userId ?? defaultMockUserId,
     name,
     description,
     technologies,
@@ -258,7 +259,7 @@ function createMockDisplaySettings(
   }
 
   return {
-    id: payload.displaySettings.id ?? getNextDisplaySettingsId(),
+    id: getNextDisplaySettingsId(),
     projectId,
     showStatusTag: payload.displaySettings.showStatusTag,
     showIcons: payload.displaySettings.showIcons,
@@ -270,7 +271,7 @@ function createMockDisplaySettings(
 function createProjectFromPayload(id: number, payload: ProjectPayload): ProjectDto {
   return {
     id,
-    userId: payload.userId,
+    userId: defaultMockUserId,
     name: payload.name,
     description: payload.description,
     technologies: payload.technologies,
@@ -411,6 +412,43 @@ async function deleteProjectWithApi(projectId: number, token?: string | null) {
   });
 }
 
+async function getProjectDisplaySettingsWithApi(
+  projectId: number,
+  token?: string | null,
+) {
+  const { data: jsonResponse } = await apiClient.request(
+    `/api/projects/${projectId}/display-settings`,
+    {
+      method: 'GET',
+      token,
+    },
+  );
+
+  return normalizeDisplaySettings(jsonResponse);
+}
+
+async function updateProjectDisplaySettingsWithApi(
+  projectId: number,
+  payload: ProjectDisplaySettingsDto,
+  token?: string | null,
+) {
+  const { data: jsonResponse } = await apiClient.request(
+    `/api/projects/${projectId}/display-settings`,
+    {
+      method: 'PUT',
+      body: {
+        showStatusTag: payload.showStatusTag,
+        showIcons: payload.showIcons,
+        showTechnologies: payload.showTechnologies,
+        showProject: payload.showProject,
+      },
+      token,
+    },
+  );
+
+  return normalizeDisplaySettings(jsonResponse) ?? payload;
+}
+
 export const projectApi = {
   listProjects(token?: string | null) {
     return isMockProjectsEnabled
@@ -438,5 +476,40 @@ export const projectApi = {
     return isMockProjectsEnabled
       ? deleteProjectWithMock(projectId)
       : deleteProjectWithApi(projectId, token);
+  },
+
+  getProjectDisplaySettings(projectId: number, token?: string | null) {
+    if (isMockProjectsEnabled) {
+      const project = projectsStore.find(
+        (candidate) => candidate.id === projectId,
+      );
+
+      return Promise.resolve(project?.displaySettings ?? null);
+    }
+
+    return getProjectDisplaySettingsWithApi(projectId, token);
+  },
+
+  updateProjectDisplaySettings(
+    projectId: number,
+    payload: ProjectDisplaySettingsDto,
+    token?: string | null,
+  ) {
+    if (isMockProjectsEnabled) {
+      const updatedSettings = {
+        ...payload,
+        projectId,
+      };
+
+      projectsStore = projectsStore.map((project) =>
+        project.id === projectId
+          ? { ...project, displaySettings: updatedSettings }
+          : project,
+      );
+
+      return Promise.resolve(updatedSettings);
+    }
+
+    return updateProjectDisplaySettingsWithApi(projectId, payload, token);
   },
 };

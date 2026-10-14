@@ -1,13 +1,15 @@
 import { userFilesMock } from '@/features/files/mocks/userFiles.mock';
-import type { UserFileDto } from '@/features/files/types/userFile.types';
-import { apiClient, hasApiBaseUrl } from '@/shared/api/apiClient';
+import type {
+  UserFileDto,
+  UserFilePayload,
+} from '@/features/files/types/userFile.types';
+import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
 const userFilesEndpoint =
-  import.meta.env.VITE_USER_FILES_ENDPOINT?.trim() || '/api/userfiles';
+  import.meta.env.VITE_USER_FILES_ENDPOINT?.trim() || '/api/user-files';
 
 export const isMockUserFilesEnabled =
-  import.meta.env.VITE_USE_MOCK_USER_FILES !== 'false' ||
-  !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_USER_FILES');
 
 const userFilesStore: UserFileDto[] = cloneUserFiles(userFilesMock);
 
@@ -161,6 +163,91 @@ async function listUserFilesWithApi(token?: string | null) {
   return files;
 }
 
+async function getUserFileWithApi(fileId: number, token?: string | null) {
+  const { data: jsonResponse } = await apiClient.request(
+    `${userFilesEndpoint}/${fileId}`,
+    {
+      method: 'GET',
+      fallbackErrorMessage: 'No se pudo cargar el archivo.',
+      token,
+    },
+  );
+  const file =
+    normalizeUserFile(jsonResponse) ??
+    (isRecord(jsonResponse)
+      ? normalizeUserFile(jsonResponse.data ?? jsonResponse.Data)
+      : undefined);
+
+  if (!file) {
+    throw new Error('El servidor devolvio un archivo invalido.');
+  }
+
+  return file;
+}
+
+async function createUserFileWithApi(
+  payload: UserFilePayload,
+  token?: string | null,
+) {
+  const { data: jsonResponse } = await apiClient.request(userFilesEndpoint, {
+    method: 'POST',
+    body: payload,
+    fallbackErrorMessage: 'No se pudo crear el archivo.',
+    token,
+  });
+  const file =
+    normalizeUserFile(jsonResponse) ??
+    (isRecord(jsonResponse)
+      ? normalizeUserFile(jsonResponse.data ?? jsonResponse.Data)
+      : undefined);
+
+  if (!file) {
+    throw new Error('El servidor devolvio un archivo creado invalido.');
+  }
+
+  return file;
+}
+
+async function updateUserFileWithApi(
+  fileId: number,
+  payload: UserFilePayload,
+  token?: string | null,
+) {
+  const { data: jsonResponse } = await apiClient.request(
+    `${userFilesEndpoint}/${fileId}`,
+    {
+      method: 'PUT',
+      body: payload,
+      fallbackErrorMessage: 'No se pudo actualizar el archivo.',
+      token,
+    },
+  );
+  const file =
+    normalizeUserFile(jsonResponse) ??
+    (isRecord(jsonResponse)
+      ? normalizeUserFile(jsonResponse.data ?? jsonResponse.Data)
+      : undefined);
+
+  if (!file) {
+    return {
+      ...payload,
+      id: fileId,
+      userId: 0,
+      uploadedAt: new Date().toISOString(),
+    };
+  }
+
+  return file;
+}
+
+async function deleteUserFileWithApi(fileId: number, token?: string | null) {
+  await apiClient.request(`${userFilesEndpoint}/${fileId}`, {
+    method: 'DELETE',
+    fallbackErrorMessage: 'No se pudo eliminar el archivo.',
+    token,
+  });
+}
+
 export function isImageUserFile(file: UserFileDto) {
   const normalizedType = file.fileType.trim().toLowerCase();
   const normalizedUrl = file.fileUrl.trim().toLowerCase();
@@ -177,5 +264,47 @@ export const fileApi = {
     return isMockUserFilesEnabled
       ? listUserFilesWithMock()
       : listUserFilesWithApi(token);
+  },
+
+  getUserFile(fileId: number, token?: string | null) {
+    if (isMockUserFilesEnabled) {
+      const file = userFilesStore.find((candidate) => candidate.id === fileId);
+
+      if (!file) {
+        throw new Error('UserFile not found');
+      }
+
+      return Promise.resolve({ ...file });
+    }
+
+    return getUserFileWithApi(fileId, token);
+  },
+
+  createUserFile(payload: UserFilePayload, token?: string | null) {
+    if (isMockUserFilesEnabled) {
+      throw new Error('User file creation is not implemented in mock mode.');
+    }
+
+    return createUserFileWithApi(payload, token);
+  },
+
+  updateUserFile(
+    fileId: number,
+    payload: UserFilePayload,
+    token?: string | null,
+  ) {
+    if (isMockUserFilesEnabled) {
+      throw new Error('User file update is not implemented in mock mode.');
+    }
+
+    return updateUserFileWithApi(fileId, payload, token);
+  },
+
+  deleteUserFile(fileId: number, token?: string | null) {
+    if (isMockUserFilesEnabled) {
+      throw new Error('User file deletion is not implemented in mock mode.');
+    }
+
+    return deleteUserFileWithApi(fileId, token);
   },
 };

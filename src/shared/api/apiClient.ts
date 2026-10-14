@@ -1,9 +1,16 @@
+import axios, {
+  AxiosError,
+  type AxiosRequestConfig,
+  type Method,
+} from 'axios';
+
 export interface ApiClientRequestOptions
-  extends Omit<RequestInit, 'body' | 'headers'> {
+  extends Omit<AxiosRequestConfig, 'data' | 'headers' | 'method' | 'url'> {
   body?: unknown;
   fallbackErrorMessage?: string;
   headers?: Record<string, string>;
-  rawBody?: BodyInit | null;
+  method?: Method;
+  rawBody?: AxiosRequestConfig['data'];
   throwOnHttpError?: boolean;
   token?: string | null;
 }
@@ -14,7 +21,9 @@ export interface ApiClientResponse<TData = unknown> {
   status: number;
 }
 
-export const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '')
+export const apiBaseUrl = (
+  import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7140'
+)
   .trim()
   .replace(/\/$/, '');
 
@@ -42,20 +51,6 @@ export function getResponseMessage(value: unknown, fallback: string) {
   return readString(value, 'message', 'Message') ?? fallback;
 }
 
-async function readJsonResponse(response: Response) {
-  const text = await response.text();
-
-  if (!text) {
-    return undefined;
-  }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return undefined;
-  }
-}
-
 function createHeaders({
   body,
   headers,
@@ -77,13 +72,30 @@ function createHeaders({
 
 function createRequestBody(
   body: unknown,
-  rawBody: BodyInit | null | undefined,
+  rawBody: AxiosRequestConfig['data'] | undefined,
 ) {
   if (rawBody !== undefined) {
     return rawBody;
   }
 
   return body === undefined ? undefined : JSON.stringify(body);
+}
+
+function normalizeApiPath(path: string) {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+export function isMockEnabled(flagName: string) {
+  return import.meta.env[flagName] === 'true' || !hasApiBaseUrl;
+}
+
+const axiosClient = axios.create({
+  baseURL: apiBaseUrl,
+  validateStatus: () => true,
+});
+
+function createNetworkErrorMessage(fallbackErrorMessage?: string) {
+  return fallbackErrorMessage ?? 'No se pudo conectar con el servidor.';
 }
 
 export const apiClient = {
@@ -93,36 +105,48 @@ export const apiClient = {
       body,
       fallbackErrorMessage,
       headers,
+      method,
       rawBody,
       throwOnHttpError = true,
       token,
       ...init
     }: ApiClientRequestOptions = {},
   ): Promise<ApiClientResponse<TData>> {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      ...init,
-      body: createRequestBody(body, rawBody),
-      headers: createHeaders({ body, headers, rawBody, token }),
-    });
-    const data = (await readJsonResponse(response)) as TData | undefined;
+    try {
+      const response = await axiosClient.request<TData>({
+        ...init,
+        data: createRequestBody(body, rawBody),
+        headers: createHeaders({ body, headers, rawBody, token }),
+        method,
+        url: normalizeApiPath(path),
+      });
 
-    if (!response.ok && throwOnHttpError) {
-      const httpFallbackMessage = fallbackErrorMessage
-        ? `${fallbackErrorMessage} Estado HTTP ${response.status}.`
-        : `No se pudo completar la operacion. Estado HTTP ${response.status}.`;
+      if (response.status < 200 || response.status >= 300) {
+        if (throwOnHttpError) {
+          const httpFallbackMessage = fallbackErrorMessage
+            ? `${fallbackErrorMessage} Estado HTTP ${response.status}.`
+            : `No se pudo completar la operacion. Estado HTTP ${response.status}.`;
 
-      throw new Error(
-        getResponseMessage(
-          data,
-          httpFallbackMessage,
-        ),
-      );
+          throw new Error(
+            getResponseMessage(
+              response.data,
+              httpFallbackMessage,
+            ),
+          );
+        }
+      }
+
+      return {
+        data: response.data,
+        ok: response.status >= 200 && response.status < 300,
+        status: response.status,
+      };
+    } catch (error) {
+      if (error instanceof AxiosError && !error.response) {
+        throw new Error(createNetworkErrorMessage(fallbackErrorMessage));
+      }
+
+      throw error;
     }
-
-    return {
-      data,
-      ok: response.ok,
-      status: response.status,
-    };
   },
 };

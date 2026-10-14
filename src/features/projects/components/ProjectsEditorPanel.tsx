@@ -18,7 +18,6 @@ interface ProjectsEditorPanelProps {
   projects: ProjectDto[];
   isLoading: boolean;
   error: string | null;
-  currentUserId: number;
   onCreateProject: (payload: ProjectPayload) => Promise<ProjectDto>;
   onUpdateProject: (
     projectId: number,
@@ -30,7 +29,6 @@ interface ProjectsEditorPanelProps {
 type ProjectEditor = { mode: 'create' } | { mode: 'edit'; projectId: number };
 
 interface ProjectDraft {
-  userId: number;
   name: string;
   description: string;
   technologies: string;
@@ -106,12 +104,8 @@ function sortProjectImages(project: ProjectDto) {
   );
 }
 
-function createEmptyProjectDraft(
-  currentUserId: number,
-  projects: ProjectDto[],
-): ProjectDraft {
+function createEmptyProjectDraft(projects: ProjectDto[]): ProjectDraft {
   return {
-    userId: currentUserId,
     name: 'Nuevo proyecto',
     description: '',
     technologies: '',
@@ -131,7 +125,6 @@ function createProjectDraft(project: ProjectDto): ProjectDraft {
   const displaySettings = getDisplaySettings(project);
 
   return {
-    userId: project.userId,
     name: project.name,
     description: project.description,
     technologies: project.technologies,
@@ -158,10 +151,7 @@ function parseProjectStatus(status: string): ProjectStatus {
     : normalizedStatus;
 }
 
-function getProjectPayload(
-  draft: ProjectDraft,
-  project?: ProjectDto | null,
-): ProjectPayload {
+function getProjectPayload(draft: ProjectDraft): ProjectPayload {
   const images = draft.images
     .map((image) => ({
       imageUrl: image.imageUrl.trim(),
@@ -173,7 +163,6 @@ function getProjectPayload(
   const hasCover = images.some((image) => image.isCover);
 
   return {
-    userId: Number(draft.userId),
     name: draft.name.trim() || 'Untitled project',
     description: draft.description.trim(),
     technologies: draft.technologies.trim(),
@@ -184,8 +173,6 @@ function getProjectPayload(
     collaborators: draft.collaborators.trim() || null,
     sortOrder: getSafeSortOrder(Number(draft.sortOrder)),
     displaySettings: {
-      id: project?.displaySettings?.id,
-      projectId: project?.id,
       showStatusTag: draft.showStatusTag,
       showIcons: draft.showIcons,
       showTechnologies: draft.showTechnologies,
@@ -383,7 +370,6 @@ export default function ProjectsEditorPanel({
   projects,
   isLoading,
   error,
-  currentUserId,
   onCreateProject,
   onUpdateProject,
   onDeleteProject,
@@ -398,20 +384,15 @@ export default function ProjectsEditorPanel({
   );
   const [editor, setEditor] = useState<ProjectEditor | null>(null);
   const [draft, setDraft] = useState<ProjectDraft>(() =>
-    createEmptyProjectDraft(currentUserId, []),
+    createEmptyProjectDraft([]),
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const editorProject =
-    editor?.mode === 'edit'
-      ? sortedProjects.find((project) => project.id === editor.projectId) ?? null
-      : null;
-
   const openCreateProject = () => {
     setEditor({ mode: 'create' });
-    setDraft(createEmptyProjectDraft(currentUserId, sortedProjects));
+    setDraft(createEmptyProjectDraft(sortedProjects));
     setStatusMessage('');
     setMutationError('');
   };
@@ -425,7 +406,7 @@ export default function ProjectsEditorPanel({
 
   const closeEditor = () => {
     setEditor(null);
-    setDraft(createEmptyProjectDraft(currentUserId, sortedProjects));
+    setDraft(createEmptyProjectDraft(sortedProjects));
     setMutationError('');
   };
 
@@ -498,7 +479,7 @@ export default function ProjectsEditorPanel({
     setMutationError('');
 
     try {
-      const payload = getProjectPayload(draft, editorProject);
+      const payload = getProjectPayload(draft);
       const savedProject =
         editor.mode === 'create'
           ? await onCreateProject(payload)
@@ -630,21 +611,6 @@ export default function ProjectsEditorPanel({
                   }
                   className={fieldClass}
                   required
-                />
-              </label>
-
-              <label>
-                <span className={labelClass}>UserId</span>
-                <input
-                  type="number"
-                  value={draft.userId}
-                  onChange={(event) =>
-                    setDraft((currentDraft) => ({
-                      ...currentDraft,
-                      userId: Number(event.target.value),
-                    }))
-                  }
-                  className={fieldClass}
                 />
               </label>
 

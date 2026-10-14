@@ -12,7 +12,7 @@ function sortCards(cards: UserCardDto[]) {
   );
 }
 
-export function useUserCards() {
+export function useUserCards(token?: string | null) {
   const [cards, setCards] = useState<UserCardDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,7 @@ export function useUserCards() {
     setError(null);
 
     try {
-      setCards(await cardApi.listUserCards());
+      setCards(await cardApi.listUserCards(token));
     } catch (unknownError) {
       setError(
         unknownError instanceof Error
@@ -32,23 +32,23 @@ export function useUserCards() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     void loadCards();
   }, [loadCards]);
 
   const createCard = useCallback(async (payload: UserCardPayload) => {
-    const createdCard = await cardApi.createUserCard(payload);
+    const createdCard = await cardApi.createUserCard(payload, token);
 
     setCards((currentCards) => sortCards([...currentCards, createdCard]));
 
     return createdCard;
-  }, []);
+  }, [token]);
 
   const updateCard = useCallback(
     async (userCardId: number, payload: UserCardPayload) => {
-      const updatedCard = await cardApi.updateUserCard(userCardId, payload);
+      const updatedCard = await cardApi.updateUserCard(userCardId, payload, token);
 
       setCards((currentCards) =>
         sortCards(
@@ -60,42 +60,34 @@ export function useUserCards() {
 
       return updatedCard;
     },
-    [],
+    [token],
   );
 
   const deleteCard = useCallback(async (userCardId: number) => {
-    await cardApi.deleteUserCard(userCardId);
+    await cardApi.deleteUserCard(userCardId, token);
     setCards((currentCards) =>
       currentCards.filter((card) => card.id !== userCardId),
     );
-  }, []);
+  }, [token]);
 
   const createBlock = useCallback(
     async (userCardId: number, payload: UserCardBlockPayload) => {
-      const createdBlock = await cardApi.createUserCardBlock(
-        userCardId,
-        payload,
-      );
+      const { block: createdBlock, card: updatedCard } =
+        await cardApi.createUserCardBlock(
+          userCardId,
+          payload,
+          token,
+        );
 
       setCards((currentCards) =>
-        currentCards.map((card) => {
-          if (card.id !== userCardId) {
-            return card;
-          }
-
-          return {
-            ...card,
-            blocks: [...card.blocks, createdBlock].sort(
-              (currentBlock, nextBlock) =>
-                currentBlock.sortOrder - nextBlock.sortOrder,
-            ),
-          };
-        }),
+        currentCards.map((card) =>
+          card.id === userCardId ? updatedCard : card,
+        ),
       );
 
       return createdBlock;
     },
-    [],
+    [token],
   );
 
   const updateBlock = useCallback(
@@ -104,55 +96,40 @@ export function useUserCards() {
       userCardBlockId: number,
       payload: UserCardBlockPayload,
     ) => {
-      const updatedBlock = await cardApi.updateUserCardBlock(
-        userCardId,
-        userCardBlockId,
-        payload,
-      );
+      const { block: updatedBlock, card: updatedCard } =
+        await cardApi.updateUserCardBlock(
+          userCardId,
+          userCardBlockId,
+          payload,
+          token,
+        );
 
       setCards((currentCards) =>
-        currentCards.map((card) => {
-          if (card.id !== userCardId) {
-            return card;
-          }
-
-          return {
-            ...card,
-            blocks: card.blocks
-              .map((block) =>
-                block.id === userCardBlockId ? updatedBlock : block,
-              )
-              .sort(
-                (currentBlock, nextBlock) =>
-                  currentBlock.sortOrder - nextBlock.sortOrder,
-              ),
-          };
-        }),
+        currentCards.map((card) =>
+          card.id === userCardId ? updatedCard : card,
+        ),
       );
 
       return updatedBlock;
     },
-    [],
+    [token],
   );
 
   const deleteBlock = useCallback(
     async (userCardId: number, userCardBlockId: number) => {
-      await cardApi.deleteUserCardBlock(userCardId, userCardBlockId);
+      const updatedCard = await cardApi.deleteUserCardBlock(
+        userCardId,
+        userCardBlockId,
+        token,
+      );
 
       setCards((currentCards) =>
-        currentCards.map((card) => {
-          if (card.id !== userCardId) {
-            return card;
-          }
-
-          return {
-            ...card,
-            blocks: card.blocks.filter((block) => block.id !== userCardBlockId),
-          };
-        }),
+        currentCards.map((card) =>
+          card.id === userCardId ? updatedCard : card,
+        ),
       );
     },
-    [],
+    [token],
   );
 
   return {

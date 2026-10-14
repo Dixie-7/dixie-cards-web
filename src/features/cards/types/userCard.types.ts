@@ -25,5 +25,5 @@ export interface UserCardDto {
   blocks: UserCardBlockDto[];
 }
 
-export type UserCardPayload = Omit<UserCardDto, 'id' | 'blocks'>;
+export type UserCardPayload = Omit<UserCardDto, 'id' | 'userId' | 'blocks'>;
 export type UserCardBlockPayload = Omit<UserCardBlockDto, 'id' | 'userCardId'>;

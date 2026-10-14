@@ -1,12 +1,12 @@
 import { skillsMock } from '@/features/skills/mocks/skills.mock';
 import type { SkillDto, SkillPayload } from '@/features/skills/types/skill.types';
-import { apiClient, hasApiBaseUrl } from '@/shared/api/apiClient';
+import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
 const skillsEndpoint =
-  import.meta.env.VITE_SKILLS_ENDPOINT?.trim() || '/api/skills';
+  import.meta.env.VITE_SKILLS_ENDPOINT?.trim() || '/api/Skills';
 
 export const isMockSkillsEnabled =
-  import.meta.env.VITE_USE_MOCK_SKILLS !== 'false' || !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_SKILLS');
 
 let skillsStore: SkillDto[] = cloneSkills(skillsMock);
 

@@ -8,3 +8,8 @@ export interface UserFileDto {
   isPrimaryCv: boolean;
   uploadedAt: string;
 }
+
+export type UserFilePayload = Omit<
+  UserFileDto,
+  'id' | 'userId' | 'uploadedAt'
+>;

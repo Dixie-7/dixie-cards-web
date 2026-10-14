@@ -3,15 +3,14 @@ import type {
   UserLanguageDto,
   UserLanguagePayload,
 } from '@/features/languages/types/language.types';
-import { apiClient, hasApiBaseUrl } from '@/shared/api/apiClient';
+import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
 const userLanguagesEndpoint =
   import.meta.env.VITE_USER_LANGUAGES_ENDPOINT?.trim() ||
-  '/api/userlanguages';
+  '/api/user-languages';
 
 export const isMockUserLanguagesEnabled =
-  import.meta.env.VITE_USE_MOCK_USER_LANGUAGES !== 'false' ||
-  !hasApiBaseUrl;
+  isMockEnabled('VITE_USE_MOCK_USER_LANGUAGES');
 
 let userLanguagesStore: UserLanguageDto[] = cloneLanguages(userLanguagesMock);
 

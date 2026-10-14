@@ -39,8 +39,6 @@ export interface ProjectDto {
 }
 
 export interface ProjectDisplaySettingsPayload {
-  id?: number;
-  projectId?: number;
   showStatusTag: boolean;
   showIcons: boolean;
   showTechnologies: boolean;
@@ -48,7 +46,6 @@ export interface ProjectDisplaySettingsPayload {
 }
 
 export interface ProjectPayload {
-  userId: number;
   name: string;
   description: string;
   technologies: string;

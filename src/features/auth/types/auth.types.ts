@@ -39,6 +39,7 @@ export type AuthErrorCode =
   | 'EMAIL_ALREADY_EXISTS'
   | 'USERNAME_ALREADY_EXISTS'
   | 'SESSION_EXPIRED'
+  | 'RATE_LIMITED'
   | 'UNEXPECTED_ERROR';
 
 export interface LoginResultDto {
@@ -55,8 +56,18 @@ export interface RegisterResultDto {
   data?: RegisterResponseDto;
 }
 
+export interface AuthActionResultDto {
+  success: boolean;
+  errorCode?: AuthErrorCode;
+  message?: string;
+}
+
 export interface VerifyEmailRequestDto {
   token: string;
+}
+
+export interface ResendVerificationRequestDto {
+  email: string;
 }
 
 export type AuthenticatedUserDto = Pick<UserDto, 'id' | 'username' | 'email'>;
