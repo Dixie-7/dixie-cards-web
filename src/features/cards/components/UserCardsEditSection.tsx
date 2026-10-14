@@ -4,10 +4,12 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import type { UserCardBlockDto, UserCardDto } from '@/features/cards/types/userCard.types';
+import { mainCardTitle } from '@/features/cards/constants/cardEditorOptions';
 import {
   getHorizontalPlacementClassFromStyleText,
   getPlacementClassFromStyleText,
 } from '@/features/cards/services/styleText';
+import MainCard from './MainCard';
 import UserCard from './UserCard';
 
 interface UserCardsEditSectionProps {
@@ -30,7 +32,7 @@ function getSafeWidth(width: number) {
     return 100;
   }
 
-  return Math.min(Math.max(width, 1), 100);
+  return Math.min(Math.max(width, 0), 100);
 }
 
 function getWidthStyle(width: number) {
@@ -77,8 +79,62 @@ export default function UserCardsEditSection({
         <div className="-m-2.5 flex flex-wrap">
           {sortedCards.map((card) => {
             const isActiveCard = card.id === activeCardId;
+            const isMainCard = card.title === mainCardTitle;
             const horizontalPlacement = getHorizontalPlacementClassFromStyleText(
               card.styleText,
+            );
+            const cardActions = (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEditCard(card)}
+                  className={iconButtonClass}
+                  aria-label={`Edit ${card.title}`}
+                  title="Edit"
+                >
+                  <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAddBlock(card)}
+                  className={iconButtonClass}
+                  aria-label={`Add block to ${card.title}`}
+                  title="Add block"
+                >
+                  <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteCard(card)}
+                  className={dangerIconButtonClass}
+                  aria-label={`Delete ${card.title}`}
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </>
+            );
+            const renderBlockActions = (block: UserCardBlockDto) => (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEditBlock(card, block)}
+                  className={iconButtonClass}
+                  aria-label={`Edit ${block.title ?? block.type}`}
+                  title="Edit"
+                >
+                  <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteBlock(card, block)}
+                  className={dangerIconButtonClass}
+                  aria-label={`Delete ${block.title ?? block.type}`}
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </>
             );
 
             return (
@@ -95,62 +151,21 @@ export default function UserCardsEditSection({
                   }
                   style={getWidthStyle(isActiveCard ? card.width : 100)}
                 >
-                  <UserCard
-                    card={card}
-                    actions={
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onEditCard(card)}
-                          className={iconButtonClass}
-                          aria-label={`Edit ${card.title}`}
-                          title="Edit"
-                        >
-                          <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onAddBlock(card)}
-                          className={iconButtonClass}
-                          aria-label={`Add block to ${card.title}`}
-                          title="Add block"
-                        >
-                          <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteCard(card)}
-                          className={dangerIconButtonClass}
-                          aria-label={`Delete ${card.title}`}
-                          title="Delete"
-                        >
-                          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </>
-                    }
-                    renderBlockActions={(block) => (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onEditBlock(card, block)}
-                          className={iconButtonClass}
-                          aria-label={`Edit ${block.title ?? block.type}`}
-                          title="Edit"
-                        >
-                          <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteBlock(card, block)}
-                          className={dangerIconButtonClass}
-                          aria-label={`Delete ${block.title ?? block.type}`}
-                          title="Delete"
-                        >
-                          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </>
-                    )}
-                  />
+                  {isMainCard ? (
+                    <MainCard
+                      card={card}
+                      actions={cardActions}
+                      manageWidth={false}
+                      renderBlockActions={renderBlockActions}
+                      standalone={false}
+                    />
+                  ) : (
+                    <UserCard
+                      card={card}
+                      actions={cardActions}
+                      renderBlockActions={renderBlockActions}
+                    />
+                  )}
                 </div>
               </div>
             );

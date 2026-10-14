@@ -20,7 +20,11 @@ import SkillsSection from '@/features/skills/components/SkillsSection';
 import { useSkills } from '@/features/skills/hooks/useSkills';
 import UserConfigModal from '@/features/user-config/components/UserConfigModal';
 import { useUserConfig } from '@/features/user-config/hooks/useUserConfig';
-import FloatingNavbar from '@/shared/components/FloatingNavbar';
+import FloatingNavbar, {
+  type FloatingNavbarItem,
+} from '@/shared/components/FloatingNavbar';
+
+const homeNavigationItem: FloatingNavbarItem = { label: 'Home', href: '/' };
 
 function PortfolioPage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -83,13 +87,35 @@ function PortfolioPage() {
     (card) => card.title !== mainCardTitle,
   );
   const userLabel = user?.username ?? user?.email;
+  const ownerLabel = user?.username ? `@${user.username}` : userLabel;
+  const navigationItems: FloatingNavbarItem[] = [
+    homeNavigationItem,
+    ...(isEditMode || userConfig.showProjectsSection
+      ? [{ label: 'Projects', href: '#projects' }]
+      : []),
+    ...(isEditMode || userConfig.showCardsSection
+      ? [{ label: 'DCards', href: '#dcards' }]
+      : []),
+    ...(isEditMode || userConfig.showSkillsSection
+      ? [{ label: 'Skills', href: '#skills' }]
+      : []),
+    ...(isEditMode || userConfig.showLanguagesSection
+      ? [{ label: 'Language', href: '#language' }]
+      : []),
+    ...(isEditMode || userConfig.showContactSection
+      ? [{ label: 'Contact', href: '#contact' }]
+      : []),
+  ];
 
   return (
     <main id="home" className="app-shell"> 
   
       <FloatingNavbar
+        brandHref="/"
         isAuthenticated={isAuthenticated}
         isEditMode={isEditMode}
+        navigationItems={navigationItems}
+        ownerLabel={ownerLabel}
         userLabel={userLabel}
         loginButtonRef={loginButtonRef}
         configButtonRef={configButtonRef}

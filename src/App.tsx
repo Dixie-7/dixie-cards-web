@@ -1,11 +1,43 @@
 import './App.css';
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense, type ReactNode } from 'react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from 'react-router-dom';
+import { AuthProvider } from '@/features/auth/context/AuthProvider';
 
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'));
 const PortfolioPage = lazy(
   () => import('@/features/portfolio/pages/PortfolioPage'),
 );
+const PublicPortfolioPage = lazy(
+  () => import('@/features/public-portfolio/pages/PublicPortfolioPage'),
+);
+
+const reservedPublicUsernames = new Set([
+  'dashboard',
+  'login',
+  'portfolio',
+  'settings',
+  'verify-email',
+]);
+
+function withAuthProvider(element: ReactNode) {
+  return <AuthProvider>{element}</AuthProvider>;
+}
+
+function PublicPortfolioRoute() {
+  const { username } = useParams();
+
+  if (username && reservedPublicUsernames.has(username.toLowerCase())) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <PublicPortfolioPage />;
+}
 
 function App() {
   return (
@@ -21,8 +53,15 @@ function App() {
         }
       >
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/portfolio" element={<PortfolioPage />} />
+          <Route path="/" element={withAuthProvider(<LandingPage />)} />
+          <Route
+            path="/portfolio"
+            element={withAuthProvider(<PortfolioPage />)}
+          />
+          <Route
+            path="/:username"
+            element={withAuthProvider(<PublicPortfolioRoute />)}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

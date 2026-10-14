@@ -7,8 +7,15 @@ import type {
 } from '@/features/cards/types/userCard.types';
 import { apiClient, isMockEnabled } from '@/shared/api/apiClient';
 
-type UserCardBlockRequest = UserCardBlockPayload & { id?: number };
-type UserCardRequest = UserCardPayload & { blocks: UserCardBlockRequest[] };
+type UserCardBlockRequest = UserCardBlockPayload & {
+  id?: number;
+  userCardId?: number;
+};
+type UserCardRequest = UserCardPayload & {
+  id?: number;
+  userId?: number;
+  blocks: UserCardBlockRequest[];
+};
 
 interface BlockMutationResult {
   block: UserCardBlockDto;
@@ -111,6 +118,14 @@ function readNumber(
   return undefined;
 }
 
+function normalizePersistedWidth(value: number | undefined) {
+  if (value === undefined || value <= 0) {
+    return 100;
+  }
+
+  return Math.min(value, 100);
+}
+
 function normalizeUserCardBlock(
   value: unknown,
 ): UserCardBlockDto | undefined {
@@ -121,7 +136,7 @@ function normalizeUserCardBlock(
   const id = readNumber(value, 'id', 'Id');
   const userCardId = readNumber(value, 'userCardId', 'UserCardId') ?? 0;
   const type = readString(value, 'type', 'Type');
-  const width = readNumber(value, 'width', 'Width') ?? 100;
+  const width = normalizePersistedWidth(readNumber(value, 'width', 'Width'));
   const sortOrder = readNumber(value, 'sortOrder', 'SortOrder') ?? 0;
 
   if (id === undefined || !type) {
@@ -164,7 +179,7 @@ function normalizeUserCard(value: unknown): UserCardDto | undefined {
   const id = readNumber(value, 'id', 'Id');
   const title = readString(value, 'title', 'Title');
   const userId = readNumber(value, 'userId', 'UserId') ?? defaultMockUserId;
-  const width = readNumber(value, 'width', 'Width') ?? 100;
+  const width = normalizePersistedWidth(readNumber(value, 'width', 'Width'));
   const sortOrder = readNumber(value, 'sortOrder', 'SortOrder') ?? 0;
 
   if (id === undefined || !title) {
@@ -237,9 +252,13 @@ function getCardPayload(card: UserCardDto): UserCardPayload {
   };
 }
 
-function getBlockRequest(block: UserCardBlockDto): UserCardBlockRequest {
+function getBlockRequest(
+  block: UserCardBlockDto,
+  userCardId = block.userCardId,
+): UserCardBlockRequest {
   return {
     id: block.id,
+    userCardId,
     type: block.type,
     title: block.title ?? null,
     content: block.content ?? null,
@@ -253,25 +272,51 @@ function getBlockRequest(block: UserCardBlockDto): UserCardBlockRequest {
   };
 }
 
+function getBlockPayloadRequest(
+  userCardId: number,
+  payload: UserCardBlockPayload,
+  userCardBlockId = 0,
+): UserCardBlockRequest {
+  return {
+    ...payload,
+    id: userCardBlockId,
+    userCardId,
+  };
+}
+
 function createCardRequest(
   payload: UserCardPayload,
   blocks: UserCardBlockRequest[] = [],
+  card?: Pick<UserCardDto, 'id' | 'userId'>,
 ): UserCardRequest {
   return {
+    id: card?.id,
+    userId: card?.userId,
     ...payload,
     blocks,
   };
+}
+
+function createPersistedCardRequest(
+  card: UserCardDto,
+  payload: UserCardPayload = getCardPayload(card),
+  blocks: UserCardBlockRequest[] = card.blocks.map((block) =>
+    getBlockRequest(block, card.id),
+  ),
+) {
+  return createCardRequest(payload, blocks, card);
 }
 
 function createCardFromPayload(
   id: number,
   payload: UserCardPayload,
   blocks: UserCardBlockDto[] = [],
+  userId = defaultMockUserId,
 ): UserCardDto {
   return {
     ...payload,
     id,
-    userId: defaultMockUserId,
+    userId,
     blocks,
   };
 }
@@ -465,11 +510,19 @@ async function updateUserCardWithApi(
   const currentCard = await getUserCardWithApi(userCardId, token);
   const updatedCard = await putUserCardWithApi(
     userCardId,
-    createCardRequest(payload, currentCard.blocks.map(getBlockRequest)),
+    createPersistedCardRequest(currentCard, payload),
     token,
   );
 
-  return updatedCard ?? createCardFromPayload(userCardId, payload, currentCard.blocks);
+  return (
+    updatedCard ??
+    createCardFromPayload(
+      userCardId,
+      payload,
+      currentCard.blocks,
+      currentCard.userId,
+    )
+  );
 }
 
 async function deleteUserCardWithApi(
@@ -508,20 +561,14 @@ async function createUserCardBlockWithApi(
   const updatedCard =
     (await putUserCardWithApi(
       userCardId,
-      createCardRequest(getCardPayload(currentCard), [
-        ...currentCard.blocks.map(getBlockRequest),
-        payload,
+      createPersistedCardRequest(currentCard, getCardPayload(currentCard), [
+        ...currentCard.blocks.map((block) =>
+          getBlockRequest(block, currentCard.id),
+        ),
+        getBlockPayloadRequest(userCardId, payload),
       ]),
       token,
-    )) ??
-    createCardFromPayload(userCardId, getCardPayload(currentCard), [
-      ...currentCard.blocks,
-      {
-        ...payload,
-        id: 0,
-        userCardId,
-      },
-    ]);
+    )) ?? (await getUserCardWithApi(userCardId, token));
   const block = findChangedBlock(updatedCard, payload, 0);
 
   if (!block) {
@@ -540,27 +587,19 @@ async function updateUserCardBlockWithApi(
   const currentCard = await getUserCardWithApi(userCardId, token);
   const updatedBlocks = currentCard.blocks.map((block) =>
     block.id === userCardBlockId
-      ? {
-          ...getBlockRequest(block),
-          ...payload,
-          id: userCardBlockId,
-        }
-      : getBlockRequest(block),
+      ? getBlockPayloadRequest(userCardId, payload, userCardBlockId)
+      : getBlockRequest(block, currentCard.id),
   );
   const updatedCard =
     (await putUserCardWithApi(
       userCardId,
-      createCardRequest(getCardPayload(currentCard), updatedBlocks),
+      createPersistedCardRequest(
+        currentCard,
+        getCardPayload(currentCard),
+        updatedBlocks,
+      ),
       token,
-    )) ??
-    createCardFromPayload(userCardId, getCardPayload(currentCard), [
-      ...currentCard.blocks.filter((block) => block.id !== userCardBlockId),
-      {
-        ...payload,
-        id: userCardBlockId,
-        userCardId,
-      },
-    ]);
+    )) ?? (await getUserCardWithApi(userCardId, token));
   const block = updatedCard.blocks.find(
     (candidate) => candidate.id === userCardBlockId,
   );
@@ -580,23 +619,17 @@ async function deleteUserCardBlockWithApi(
   const currentCard = await getUserCardWithApi(userCardId, token);
   const updatedCard = await putUserCardWithApi(
     userCardId,
-    createCardRequest(
+    createPersistedCardRequest(
+      currentCard,
       getCardPayload(currentCard),
       currentCard.blocks
         .filter((block) => block.id !== userCardBlockId)
-        .map(getBlockRequest),
+        .map((block) => getBlockRequest(block, currentCard.id)),
     ),
     token,
   );
 
-  return (
-    updatedCard ??
-    createCardFromPayload(
-      userCardId,
-      getCardPayload(currentCard),
-      currentCard.blocks.filter((block) => block.id !== userCardBlockId),
-    )
-  );
+  return updatedCard ?? getUserCardWithApi(userCardId, token);
 }
 
 export const cardApi = {

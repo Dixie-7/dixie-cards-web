@@ -81,6 +81,7 @@ type EditorSectionIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const styleOptionGroupLabels: Record<string, string> = {
   accent: 'Acento',
+  blockDistribution: 'Distribucion de blocks',
   blockSpacing: 'Espacio vertical entre blocks',
   blockSpacingX: 'Espacio horizontal entre blocks',
   contentAlign: 'Alineacion de contenido',
@@ -115,6 +116,53 @@ const styleOptionGroupLabels: Record<string, string> = {
   verticalPosition: 'Posicion vertical',
 };
 
+const styleOptionCategoryLabels: Record<string, string> = {
+  typography: 'Texto',
+  layout: 'Layout',
+  spacing: 'Espaciado',
+  appearance: 'Fondo, borde y color',
+  sizing: 'Tamano y forma',
+  behavior: 'Comportamiento',
+  advanced: 'Otros estilos',
+};
+
+const styleOptionGroupCategories: Record<string, string> = {
+  accent: 'appearance',
+  blockDistribution: 'layout',
+  blockSpacing: 'spacing',
+  blockSpacingX: 'spacing',
+  contentAlign: 'layout',
+  contentPaddingX: 'spacing',
+  contentPaddingY: 'spacing',
+  contentSize: 'typography',
+  contentSpacing: 'spacing',
+  contentWeight: 'typography',
+  descriptionPaddingX: 'spacing',
+  descriptionPaddingY: 'spacing',
+  descriptionSpacing: 'spacing',
+  headerSpacing: 'spacing',
+  height: 'sizing',
+  horizontalPosition: 'layout',
+  margin: 'spacing',
+  marginBottom: 'spacing',
+  marginTop: 'spacing',
+  opacity: 'appearance',
+  overflow: 'behavior',
+  radius: 'sizing',
+  shadow: 'appearance',
+  spacingX: 'spacing',
+  spacingY: 'spacing',
+  surface: 'appearance',
+  textAlign: 'typography',
+  titleAlign: 'typography',
+  titlePaddingX: 'spacing',
+  titlePaddingY: 'spacing',
+  titleSize: 'typography',
+  titleSpacing: 'spacing',
+  titleWeight: 'typography',
+  verticalPosition: 'layout',
+};
+
 const fieldClass =
   'w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white';
 const labelClass =
@@ -131,7 +179,7 @@ function getSafeWidth(width: number) {
     return 100;
   }
 
-  return Math.min(Math.max(width, 1), 100);
+  return Math.min(Math.max(width, 0), 100);
 }
 
 function getSafeSortOrder(sortOrder: number) {
@@ -319,7 +367,7 @@ function WidthControl({
       <div className="grid gap-2">
         <input
           type="number"
-          min={1}
+          min={0}
           max={100}
           value={safeValue}
           onChange={(event) => onChange(Number(event.target.value))}
@@ -327,7 +375,7 @@ function WidthControl({
         />
         <input
           type="range"
-          min={1}
+          min={0}
           max={100}
           value={safeValue}
           onChange={(event) => onChange(Number(event.target.value))}
@@ -500,47 +548,104 @@ function StyleOptionSelector({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const groupedOptions = useMemo(
-    () =>
-      options.reduce<Record<string, StyleOption[]>>((groups, option) => {
-        groups[option.group] = [...(groups[option.group] ?? []), option];
-
-        return groups;
-      }, {}),
-    [options],
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
+    {},
   );
+  const categorizedOptions = useMemo(() => {
+    const categories: Record<string, Record<string, StyleOption[]>> = {};
+
+    options.forEach((option) => {
+      const category = styleOptionGroupCategories[option.group] ?? 'advanced';
+
+      categories[category] ??= {};
+      categories[category][option.group] = [
+        ...(categories[category][option.group] ?? []),
+        option,
+      ];
+    });
+
+    return Object.entries(categories).map(([category, groups]) => ({
+      category,
+      groups: Object.entries(groups),
+    }));
+  }, [options]);
 
   return (
     <div className="space-y-3">
-      {Object.entries(groupedOptions).map(([group, groupOptions]) => (
-        <div key={group}>
-          <p className="mb-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            {styleOptionGroupLabels[group] ?? group}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {groupOptions.map((option) => {
-              const selected = styleTextIncludes(value, option);
+      {categorizedOptions.map(({ category, groups }) => {
+        const selectedCount = groups
+          .flatMap(([, groupOptions]) => groupOptions)
+          .filter((option) => styleTextIncludes(value, option)).length;
+        const isOpen = openCategories[category] ?? selectedCount > 0;
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() =>
-                    onChange(toggleStyleOption(value, option, options))
-                  }
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                    selected
-                      ? 'border-cyan-500 bg-cyan-50 text-cyan-800 dark:border-cyan-400/50 dark:bg-cyan-400/10 dark:text-cyan-100'
-                      : 'border-zinc-200 bg-white text-zinc-600 hover:border-cyan-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300'
+        return (
+          <div
+            key={category}
+            className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm font-semibold text-zinc-800 transition hover:text-cyan-700 dark:text-zinc-100 dark:hover:text-cyan-200"
+              onClick={() =>
+                setOpenCategories((currentOpenCategories) => ({
+                  ...currentOpenCategories,
+                  [category]: !isOpen,
+                }))
+              }
+              aria-expanded={isOpen}
+            >
+              <span>{styleOptionCategoryLabels[category] ?? category}</span>
+              <span className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                {selectedCount > 0
+                  ? `${selectedCount} ${selectedCount === 1 ? 'activo' : 'activos'}`
+                  : 'Contraido'}
+                <span
+                  className={`text-base leading-none transition ${
+                    isOpen ? 'rotate-90' : ''
                   }`}
                 >
-                  {option.label}
-                </button>
-              );
-            })}
+                  &gt;
+                </span>
+              </span>
+            </button>
+            {isOpen && (
+              <div className="space-y-4 border-t border-zinc-200 px-3 py-3 dark:border-zinc-800">
+                {groups.map(([group, groupOptions]) => (
+                  <fieldset key={group}>
+                    <legend className="mb-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                      {styleOptionGroupLabels[group] ?? group}
+                    </legend>
+                    <div className="flex flex-wrap gap-2">
+                      {groupOptions.map((option) => {
+                        const selected = styleTextIncludes(value, option);
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              onChange(
+                                toggleStyleOption(value, option, options),
+                              )
+                            }
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                              selected
+                                ? 'border-cyan-500 bg-cyan-50 text-cyan-800 dark:border-cyan-400/50 dark:bg-cyan-400/10 dark:text-cyan-100'
+                                : 'border-zinc-200 bg-white text-zinc-600 hover:border-cyan-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -601,6 +706,7 @@ export default function UserCardsEditorPanel({
     createEmptyBlockDraft([]),
   );
   const [statusMessage, setStatusMessage] = useState('');
+  const [mutationError, setMutationError] = useState('');
 
   const cardEditorSource =
     cardEditor?.mode === 'edit'
@@ -659,6 +765,7 @@ export default function UserCardsEditorPanel({
     setBlockEditor(null);
     setCardDraft(createEmptyCardDraft(sortedCards));
     setStatusMessage('');
+    setMutationError('');
   };
 
   const openEditCard = (card: UserCardDto) => {
@@ -668,11 +775,13 @@ export default function UserCardsEditorPanel({
     setBlockEditor(null);
     setCardDraft(createCardDraft(sourceCard));
     setStatusMessage('');
+    setMutationError('');
   };
 
   const closeCardEditor = () => {
     setCardEditor(null);
     setCardDraft(createEmptyCardDraft(sortedCards));
+    setMutationError('');
   };
 
   const openCreateBlock = (card: UserCardDto) => {
@@ -682,6 +791,7 @@ export default function UserCardsEditorPanel({
     setBlockEditor({ mode: 'create', cardId: sourceCard.id });
     setBlockDraft(createEmptyBlockDraft(sourceCard.blocks));
     setStatusMessage('');
+    setMutationError('');
   };
 
   const openEditBlock = (card: UserCardDto, block: UserCardBlockDto) => {
@@ -701,11 +811,13 @@ export default function UserCardsEditorPanel({
     });
     setBlockDraft(createBlockDraft(sourceBlock));
     setStatusMessage('');
+    setMutationError('');
   };
 
   const closeBlockEditor = () => {
     setBlockEditor(null);
     setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
+    setMutationError('');
   };
 
   const handleSaveCard = async (event: FormEvent<HTMLFormElement>) => {
@@ -751,19 +863,29 @@ export default function UserCardsEditorPanel({
       return;
     }
 
-    const payload = getBlockPayload(blockDraft);
-    const savedBlock =
-      blockEditor.mode === 'create'
-        ? await onCreateBlock(blockEditor.cardId, payload)
-        : await onUpdateBlock(
-            blockEditor.cardId,
-            blockEditor.blockId,
-            payload,
-          );
+    try {
+      setMutationError('');
 
-    setBlockEditor(null);
-    setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
-    setStatusMessage(`Block "${savedBlock.title ?? savedBlock.type}" saved.`);
+      const payload = getBlockPayload(blockDraft);
+      const savedBlock =
+        blockEditor.mode === 'create'
+          ? await onCreateBlock(blockEditor.cardId, payload)
+          : await onUpdateBlock(
+              blockEditor.cardId,
+              blockEditor.blockId,
+              payload,
+            );
+
+      setBlockEditor(null);
+      setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
+      setStatusMessage(`Block "${savedBlock.title ?? savedBlock.type}" saved.`);
+    } catch (unknownError) {
+      setMutationError(
+        unknownError instanceof Error
+          ? unknownError.message
+          : 'No se pudo guardar el block.',
+      );
+    }
   };
 
   const handleDeleteBlock = async (
@@ -896,6 +1018,12 @@ export default function UserCardsEditorPanel({
           {error && (
             <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200">
               {error}
+            </p>
+          )}
+
+          {mutationError && (
+            <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200">
+              {mutationError}
             </p>
           )}
 

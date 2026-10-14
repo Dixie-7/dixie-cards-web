@@ -22,12 +22,24 @@ const initialSource: MusicPlayerSource = {
   url: defaultMusicUrl,
 };
 
-function MusicPlayer() {
+interface MusicPlayerProps {
+  allowSourceEditing?: boolean;
+  sourceTitle?: string;
+  sourceUrl?: string | null;
+  startPlaying?: boolean;
+}
+
+function MusicPlayer({
+  allowSourceEditing = true,
+  sourceTitle,
+  sourceUrl,
+  startPlaying = true,
+}: MusicPlayerProps) {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [source, setSource] = useState<MusicPlayerSource>(initialSource);
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const [draftUrl, setDraftUrl] = useState(initialSource.url);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(startPlaying);
   const [volume, setVolume] = useState(0.15);
   const [isMuted, setIsMuted] = useState(false);
   const [playedSeconds, setPlayedSeconds] = useState(0);
@@ -37,11 +49,29 @@ function MusicPlayer() {
     let isMounted = true;
 
     async function loadSource() {
+      if (sourceUrl !== undefined) {
+        const nextUrl = sourceUrl?.trim() ?? '';
+
+        if (isMounted) {
+          setSource({
+            title: sourceTitle ?? getManualSourceTitle(nextUrl),
+            url: nextUrl,
+          });
+          setDraftUrl(nextUrl);
+          setIsPlaying(startPlaying);
+          setPlayedSeconds(0);
+          setDurationSeconds(0);
+        }
+
+        return;
+      }
+
       const nextSource = await getMusicPlayerSource();
 
       if (isMounted) {
         setSource(nextSource);
         setDraftUrl(nextSource.url);
+        setIsPlaying(startPlaying);
         setPlayedSeconds(0);
         setDurationSeconds(0);
       }
@@ -52,7 +82,7 @@ function MusicPlayer() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [sourceTitle, sourceUrl, startPlaying]);
 
   if (!source.url) {
     return null;
@@ -141,18 +171,20 @@ function MusicPlayer() {
     <aside className="music-player" aria-label="Reproductor de musica">
       <div className="music-player__header">
         <span className="music-player__label">{source.title}</span>
-        <button
-          type="button"
-          className="music-player__icon-button"
-          aria-label="Cambiar cancion o playlist"
-          title="Cambiar cancion o playlist"
-          onClick={handleOpenUrlEditor}
-        >
-          <LinkIcon aria-hidden="true" />
-        </button>
+        {allowSourceEditing && (
+          <button
+            type="button"
+            className="music-player__icon-button"
+            aria-label="Cambiar cancion o playlist"
+            title="Cambiar cancion o playlist"
+            onClick={handleOpenUrlEditor}
+          >
+            <LinkIcon aria-hidden="true" />
+          </button>
+        )}
       </div>
 
-      {isEditingUrl && (
+      {allowSourceEditing && isEditingUrl && (
         <form className="music-player__form" onSubmit={handleSubmitUrl}>
           <input
             className="music-player__input"

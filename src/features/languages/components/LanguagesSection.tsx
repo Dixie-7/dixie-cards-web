@@ -4,8 +4,13 @@ import { useMemo } from 'react';
 import type { UserLanguageDto } from '@/features/languages/types/language.types';
 import { getLanguageAccentColor, getSafePercent } from './languageUi';
 
+type LanguageViewModel = Omit<UserLanguageDto, 'level' | 'skillPercent'> & {
+  level?: string | null;
+  skillPercent?: number | null;
+};
+
 interface LanguagesSectionProps {
-  languages: UserLanguageDto[];
+  languages: LanguageViewModel[];
   isLoading?: boolean;
   error?: string | null;
   showPercent?: boolean;
@@ -67,8 +72,12 @@ export default function LanguagesSection({
         {!isLoading && !error && sortedLanguages.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2">
             {sortedLanguages.map((language) => {
-              const safePercent = getSafePercent(language.skillPercent);
+              const hasPercent = typeof language.skillPercent === 'number';
+              const hasLevel = Boolean(language.level?.trim());
+              const safePercent = getSafePercent(language.skillPercent ?? 0);
               const accentColor = getLanguageAccentColor(safePercent);
+              const shouldShowLevel = showLevel && hasLevel;
+              const shouldShowPercent = showPercent && hasPercent;
 
               return (
                 <article
@@ -99,7 +108,7 @@ export default function LanguagesSection({
                         <h3 className="text-xl font-semibold text-zinc-950 dark:text-white">
                           {language.language}
                         </h3>
-                        {showLevel && (
+                        {shouldShowLevel && (
                           <span
                             className="rounded-full border px-2.5 py-1 text-xs font-semibold"
                             style={{
@@ -113,7 +122,7 @@ export default function LanguagesSection({
                         )}
                       </div>
 
-                      {showPercent && (
+                      {shouldShowPercent && (
                         <div>
                           <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                             <span>Dominio</span>

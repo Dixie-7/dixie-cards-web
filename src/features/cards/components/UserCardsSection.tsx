@@ -10,6 +10,9 @@ const mainCardTitle = 'MainCard';
 
 interface UserCardsSectionProps {
   cards?: UserCardDto[];
+  eyebrow?: string;
+  showHeader?: boolean;
+  title?: string;
 }
 
 function getSafeWidth(width: number) {
@@ -17,7 +20,7 @@ function getSafeWidth(width: number) {
     return 100;
   }
 
-  return Math.min(Math.max(width, 1), 100);
+  return Math.min(Math.max(width, 0), 100);
 }
 
 function getWidthStyle(width: number) {
@@ -28,6 +31,9 @@ function getWidthStyle(width: number) {
 
 export default function UserCardsSection({
   cards = userCardsMock.filter((card) => card.title !== mainCardTitle),
+  eyebrow = 'DCards',
+  showHeader = true,
+  title = 'Cards del portfolio',
 }: UserCardsSectionProps) {
   const sortedCards = [...cards].sort(
     (currentCard, nextCard) => currentCard.sortOrder - nextCard.sortOrder,
@@ -40,14 +46,16 @@ export default function UserCardsSection({
   return (
     <section className="w-full px-4 pb-12">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-6 text-left">
-          <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-            Editable portfolio cards
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            UserCard DTO preview
-          </h1>
-        </div>
+        {showHeader && (
+          <div className="mb-6 text-left">
+            <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
+              {eyebrow}
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
+              {title}
+            </h2>
+          </div>
+        )}
 
         <div className="-m-2.5 flex flex-wrap">
           {sortedCards.map((card) => (
