@@ -43,6 +43,7 @@ import FloatingEditorWindow from './FloatingEditorWindow';
 import UserCard from './UserCard';
 import UserCardsEditSection from './UserCardsEditSection';
 import UserCardsSection from './UserCardsSection';
+import type { StatusToastKind } from '@/shared/components/StatusToast';
 
 interface UserCardsEditorPanelProps {
   cards: UserCardDto[];
@@ -50,6 +51,7 @@ interface UserCardsEditorPanelProps {
   isEditMode: boolean;
   isLoading: boolean;
   error: string | null;
+  showCardNumber?: boolean;
   onCreateCard: (payload: UserCardPayload) => Promise<UserCardDto>;
   onUpdateCard: (
     userCardId: number,
@@ -69,6 +71,7 @@ interface UserCardsEditorPanelProps {
     userCardId: number,
     userCardBlockId: number,
   ) => Promise<void>;
+  onFeedback?: (message: string, kind: StatusToastKind) => void;
 }
 
 type CardDraft = UserCardPayload;
@@ -653,23 +656,27 @@ function StyleOptionSelector({
 function EditorActions({
   onCancel,
   label,
+  isSaving,
 }: {
   onCancel: () => void;
   label: string;
+  isSaving: boolean;
 }) {
   return (
     <div className="flex gap-2 pt-4">
       <button
         type="submit"
-        className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+        disabled={isSaving}
+        className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-500"
       >
         <CheckIcon className="h-4 w-4" aria-hidden="true" />
-        {label}
+        {isSaving ? 'Guardando...' : label}
       </button>
       <button
         type="button"
+        disabled={isSaving}
         onClick={onCancel}
-        className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
+        className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 disabled:cursor-wait disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-200"
       >
         Cancel
       </button>
@@ -683,12 +690,14 @@ export default function UserCardsEditorPanel({
   isEditMode,
   isLoading,
   error,
+  showCardNumber = true,
   onCreateCard,
   onUpdateCard,
   onDeleteCard,
   onCreateBlock,
   onUpdateBlock,
   onDeleteBlock,
+  onFeedback,
 }: UserCardsEditorPanelProps) {
   const sortedCards = useMemo(
     () =>
@@ -707,6 +716,7 @@ export default function UserCardsEditorPanel({
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const cardEditorSource =
     cardEditor?.mode === 'edit'
@@ -827,15 +837,32 @@ export default function UserCardsEditorPanel({
       return;
     }
 
-    const payload = getCardPayload(cardDraft);
-    const savedCard =
-      cardEditor.mode === 'create'
-        ? await onCreateCard(payload)
-        : await onUpdateCard(cardEditor.cardId, payload);
+    setIsSaving(true);
+    setMutationError('');
 
-    setCardEditor(null);
-    setCardDraft(createEmptyCardDraft(sortedCards));
-    setStatusMessage(`Card "${savedCard.title}" saved.`);
+    try {
+      const payload = getCardPayload(cardDraft);
+      const savedCard =
+        cardEditor.mode === 'create'
+          ? await onCreateCard(payload)
+          : await onUpdateCard(cardEditor.cardId, payload);
+      const message = `Card "${savedCard.title}" guardada.`;
+
+      setCardEditor(null);
+      setCardDraft(createEmptyCardDraft(sortedCards));
+      setStatusMessage(message);
+      onFeedback?.(message, 'success');
+    } catch (unknownError) {
+      const message =
+        unknownError instanceof Error
+          ? unknownError.message
+          : 'No se pudo guardar la card.';
+
+      setMutationError(message);
+      onFeedback?.(message, 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteCard = async (card: UserCardDto) => {
@@ -863,6 +890,8 @@ export default function UserCardsEditorPanel({
       return;
     }
 
+    setIsSaving(true);
+
     try {
       setMutationError('');
 
@@ -878,13 +907,18 @@ export default function UserCardsEditorPanel({
 
       setBlockEditor(null);
       setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
-      setStatusMessage(`Block "${savedBlock.title ?? savedBlock.type}" saved.`);
+      const message = `Block "${savedBlock.title ?? savedBlock.type}" guardado.`;
+      setStatusMessage(message);
+      onFeedback?.(message, 'success');
     } catch (unknownError) {
-      setMutationError(
+      const message =
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el block.',
-      );
+          : 'No se pudo guardar el block.';
+      setMutationError(message);
+      onFeedback?.(message, 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -922,7 +956,11 @@ export default function UserCardsEditorPanel({
           )}
           onChange={setCardDraft}
         />
-        <EditorActions onCancel={closeCardEditor} label="Save card" />
+        <EditorActions
+          onCancel={closeCardEditor}
+          label="Guardar card"
+          isSaving={isSaving}
+        />
       </form>
     );
   };
@@ -943,7 +981,11 @@ export default function UserCardsEditorPanel({
           )}
           onChange={setBlockDraft}
         />
-        <EditorActions onCancel={closeBlockEditor} label="Save block" />
+        <EditorActions
+          onCancel={closeBlockEditor}
+          label="Guardar block"
+          isSaving={isSaving}
+        />
       </form>
     );
   };
@@ -981,7 +1023,12 @@ export default function UserCardsEditorPanel({
     cardEditor !== null ? closeCardEditor : closeBlockEditor;
 
   if (!isEditMode) {
-    return <UserCardsSection cards={displayCards} />;
+    return (
+      <UserCardsSection
+        cards={displayCards}
+        showCardNumber={showCardNumber}
+      />
+    );
   }
 
   return (

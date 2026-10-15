@@ -15,9 +15,22 @@ import type {
   ProjectStatus,
 } from '@/features/projects/types/project.types';
 import type { SkillDto } from '@/features/skills/types/skill.types';
+import { normalizeUserParticlesConfig } from '@/features/user-config/services/particlesConfigNormalizer';
 import { apiClient, getResponseMessage } from '@/shared/api/apiClient';
 
 const publicPortfoliosEndpoint = '/api/public/portfolios';
+const publicConfigKeys = [
+  'userConfig',
+  'UserConfig',
+  'config',
+  'Config',
+  'configuration',
+  'Configuration',
+  'userConfiguration',
+  'UserConfiguration',
+  'settings',
+  'Settings',
+];
 
 export class PublicPortfolioNotFoundError extends Error {
   constructor(username: string) {
@@ -418,6 +431,76 @@ function sortBySortOrder<T extends { sortOrder: number }>(items: T[]) {
   );
 }
 
+function readPublicParticles(source: Record<string, unknown>) {
+  const directParticles = readValue(source, 'particles', 'Particles');
+
+  if (directParticles !== undefined && directParticles !== null) {
+    return normalizeUserParticlesConfig(directParticles);
+  }
+
+  const publicParticlesConfig = readValue(
+    source,
+    'userParticlesConfig',
+    'UserParticlesConfig',
+  );
+
+  if (publicParticlesConfig !== undefined && publicParticlesConfig !== null) {
+    return normalizeUserParticlesConfig(publicParticlesConfig);
+  }
+
+  for (const key of publicConfigKeys) {
+    const nestedConfig = source[key];
+
+    if (!isRecord(nestedConfig)) {
+      continue;
+    }
+
+    const nestedParticles = readValue(
+      nestedConfig,
+      'particles',
+      'Particles',
+    );
+
+    if (nestedParticles !== undefined && nestedParticles !== null) {
+      return normalizeUserParticlesConfig(nestedParticles);
+    }
+  }
+
+  return null;
+}
+
+function readPublicShowCardNumber(source: Record<string, unknown>) {
+  const directValue = readBoolean(
+    source,
+    'showCardNumber',
+    'ShowCardNumber',
+  );
+
+  if (directValue !== undefined) {
+    return directValue;
+  }
+
+  for (const key of publicConfigKeys) {
+    const nestedConfig = source[key];
+
+    if (!isRecord(nestedConfig)) {
+      continue;
+    }
+
+    const nestedValue = readBoolean(
+      nestedConfig,
+      'showCardNumber',
+      'ShowCardNumber',
+    );
+
+    if (nestedValue !== undefined) {
+      return nestedValue;
+    }
+  }
+
+  return true;
+}
+
 function normalizePublicPortfolio(value: unknown): PublicPortfolio | undefined {
   const source = isRecord(value)
     ? value.data ?? value.Data ?? value.portfolio ?? value.Portfolio ?? value
@@ -438,6 +521,8 @@ function normalizePublicPortfolio(value: unknown): PublicPortfolio | undefined {
     name: readNullableString(source, 'name', 'Name') ?? null,
     lastName: readNullableString(source, 'lastName', 'LastName') ?? null,
     songUrl: readNullableString(source, 'songUrl', 'SongUrl') ?? null,
+    particles: readPublicParticles(source),
+    showCardNumber: readPublicShowCardNumber(source),
     projects: sortBySortOrder(
       readArray(source, 'projects')
         .map((project, index) => normalizeProject(project, index + 1))

@@ -79,7 +79,7 @@ const blockTemplateStyles: Record<string, BlockTemplateStyle> = {
     header: 'mb-4 flex items-center gap-3 text-left',
     showHeader: true,
     showIcon: true,
-    showEyebrow: true,
+    showEyebrow: false,
     icon: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-200',
     title: 'text-base',
     eyebrow: 'text-xs uppercase tracking-normal text-zinc-500 dark:text-zinc-400',

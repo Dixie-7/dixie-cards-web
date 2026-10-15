@@ -4,6 +4,7 @@ import type { UserFileDto } from '@/features/files/types/userFile.types';
 import type { UserLanguageDto } from '@/features/languages/types/language.types';
 import type { ProjectDto } from '@/features/projects/types/project.types';
 import type { SkillDto } from '@/features/skills/types/skill.types';
+import type { UserParticlesConfig } from '@/features/user-config/types/userConfig.types';
 
 export type PublicLanguageDto = Omit<
   UserLanguageDto,
@@ -18,6 +19,8 @@ export interface PublicPortfolio {
   name?: string | null;
   lastName?: string | null;
   songUrl?: string | null;
+  particles: UserParticlesConfig | null;
+  showCardNumber: boolean;
   projects: ProjectDto[];
   skills: SkillDto[];
   languages: PublicLanguageDto[];

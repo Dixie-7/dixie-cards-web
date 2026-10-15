@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginModal from '@/features/auth/components/LoginModal';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
 import { CustomizationSection } from '../components/CustomizationSection';
 import { FinalCtaSection } from '../components/FinalCtaSection';
 import { HeroSection } from '../components/HeroSection';
@@ -11,6 +12,7 @@ import { LandingHeader } from '../components/LandingHeader';
 import { PortfolioPreviewSection } from '../components/PortfolioPreviewSection';
 import { PossibilitiesSection } from '../components/PossibilitiesSection';
 import { landingContent } from '../landingContent';
+import { landingParticlesConfig } from '../landingParticlesConfig';
 import type { AuthEntryMode, LandingLanguage } from '../landing.types';
 import '../styles/landing.css';
 
@@ -40,34 +42,42 @@ function LandingPage() {
 
   return (
     <main className="landing-page">
-      <LandingHeader
-        content={content.navigation}
-        language={language}
-        isAuthenticated={isAuthenticated}
-        onLanguageChange={setLanguage}
-        onOpenAuth={openAuth}
-        onOpenPortfolio={() => navigate('/portfolio')}
+      <ParticlesBackground
+        id="landing-particles"
+        className="landing-page__particles"
+        config={landingParticlesConfig}
       />
-      <HeroSection
-        content={content.hero}
-        onCreate={() => openAuth('register')}
-      />
-      <PossibilitiesSection content={content.possibilities} />
-      <CustomizationSection content={content.customization} />
-      <HowItWorksSection content={content.process} />
-      <PortfolioPreviewSection content={content.preview} />
-      <FinalCtaSection
-        content={content.finalCta}
-        onCreate={() => openAuth('register')}
-      />
-      <LandingFooter content={content.footer} onOpenAuth={openAuth} />
 
-      <LoginModal
-        key={authModalKey}
-        isOpen={isAuthModalOpen}
-        initialMode={authMode}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      <div className="landing-page__content">
+        <LandingHeader
+          content={content.navigation}
+          language={language}
+          isAuthenticated={isAuthenticated}
+          onLanguageChange={setLanguage}
+          onOpenAuth={openAuth}
+          onOpenPortfolio={() => navigate('/portfolio')}
+        />
+        <HeroSection
+          content={content.hero}
+          onCreate={() => openAuth('register')}
+        />
+        <PossibilitiesSection content={content.possibilities} />
+        <CustomizationSection content={content.customization} />
+        <HowItWorksSection content={content.process} />
+        <PortfolioPreviewSection content={content.preview} />
+        <FinalCtaSection
+          content={content.finalCta}
+          onCreate={() => openAuth('register')}
+        />
+        <LandingFooter content={content.footer} onOpenAuth={openAuth} />
+
+        <LoginModal
+          key={authModalKey}
+          isOpen={isAuthModalOpen}
+          initialMode={authMode}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
+      </div>
     </main>
   );
 }

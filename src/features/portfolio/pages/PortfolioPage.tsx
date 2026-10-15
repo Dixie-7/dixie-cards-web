@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import LoginModal from '@/features/auth/components/LoginModal';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { mainCardTitle } from '@/features/cards/constants/cardEditorOptions';
@@ -23,6 +23,11 @@ import { useUserConfig } from '@/features/user-config/hooks/useUserConfig';
 import FloatingNavbar, {
   type FloatingNavbarItem,
 } from '@/shared/components/FloatingNavbar';
+import StatusToast, {
+  type StatusToastKind,
+  type StatusToastMessage,
+} from '@/shared/components/StatusToast';
+import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
 
 const homeNavigationItem: FloatingNavbarItem = { label: 'Home', href: '/' };
 
@@ -30,8 +35,18 @@ function PortfolioPage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [notification, setNotification] = useState<StatusToastMessage | null>(
+    null,
+  );
   const loginButtonRef = useRef<HTMLButtonElement | null>(null);
   const configButtonRef = useRef<HTMLButtonElement | null>(null);
+  const showFeedback = useCallback(
+    (message: string, kind: StatusToastKind) => {
+      setNotification({ id: Date.now(), kind, message });
+    },
+    [],
+  );
+  const dismissFeedback = useCallback(() => setNotification(null), []);
   const { isAuthenticated, logout, token, user } = useAuth();
   const {
     cards,
@@ -109,6 +124,10 @@ function PortfolioPage() {
 
   return (
     <main id="home" className="app-shell"> 
+      <ParticlesBackground
+        id="personal-portfolio-particles"
+        config={userConfig.particles}
+      />
   
       <FloatingNavbar
         brandHref="/"
@@ -159,12 +178,14 @@ function PortfolioPage() {
             isEditMode={isEditMode}
             isLoading={isLoading}
             error={error}
+            showCardNumber={userConfig.showCardNumber}
             onCreateCard={createCard}
             onUpdateCard={updateCard}
             onDeleteCard={deleteCard}
             onCreateBlock={createBlock}
             onUpdateBlock={updateBlock}
             onDeleteBlock={deleteBlock}
+            onFeedback={showFeedback}
           />
         )}
       </div>
@@ -246,6 +267,7 @@ function PortfolioPage() {
           isLoading={isConfigLoading}
           error={configError}
           onUpdateConfig={updateConfig}
+          onFeedback={showFeedback}
           restoreFocusRef={configButtonRef}
         />
       )}
@@ -256,7 +278,19 @@ function PortfolioPage() {
         restoreFocusRef={loginButtonRef}
       />
 
-      <MusicPlayer />
+      {userConfig.showSong && userConfig.songUrl && (
+        <MusicPlayer
+          allowSourceEditing={false}
+          sourceTitle={user?.username ? `Musica de ${user.username}` : 'Mi musica'}
+          sourceUrl={userConfig.songUrl}
+          startPlaying={false}
+        />
+      )}
+
+      <StatusToast
+        notification={notification}
+        onDismiss={dismissFeedback}
+      />
     </main>
   );
 }

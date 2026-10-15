@@ -11,6 +11,7 @@ const mainCardTitle = 'MainCard';
 interface UserCardsSectionProps {
   cards?: UserCardDto[];
   eyebrow?: string;
+  showCardNumber?: boolean;
   showHeader?: boolean;
   title?: string;
 }
@@ -32,6 +33,7 @@ function getWidthStyle(width: number) {
 export default function UserCardsSection({
   cards = userCardsMock.filter((card) => card.title !== mainCardTitle),
   eyebrow = 'DCards',
+  showCardNumber = true,
   showHeader = true,
   title = 'Cards del portfolio',
 }: UserCardsSectionProps) {
@@ -64,7 +66,7 @@ export default function UserCardsSection({
               className={`p-2.5 ${getPlacementClassFromStyleText(card.styleText)} ${getHorizontalPlacementClassFromStyleText(card.styleText)}`}
               style={getWidthStyle(card.width)}
             >
-              <UserCard card={card} />
+              <UserCard card={card} showCardNumber={showCardNumber} />
             </div>
           ))}
         </div>

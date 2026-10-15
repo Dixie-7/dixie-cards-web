@@ -38,13 +38,27 @@ export function useUserCards(token?: string | null) {
     void loadCards();
   }, [loadCards]);
 
+  const refreshAfterMutation = useCallback(async () => {
+    try {
+      setCards(sortCards(await cardApi.listUserCards(token)));
+      setError(null);
+    } catch (unknownError) {
+      setError(
+        unknownError instanceof Error
+          ? unknownError.message
+          : 'No se pudieron refrescar las cards guardadas.',
+      );
+    }
+  }, [token]);
+
   const createCard = useCallback(async (payload: UserCardPayload) => {
     const createdCard = await cardApi.createUserCard(payload, token);
 
     setCards((currentCards) => sortCards([...currentCards, createdCard]));
+    await refreshAfterMutation();
 
     return createdCard;
-  }, [token]);
+  }, [refreshAfterMutation, token]);
 
   const updateCard = useCallback(
     async (userCardId: number, payload: UserCardPayload) => {
@@ -57,10 +71,11 @@ export function useUserCards(token?: string | null) {
           ),
         ),
       );
+      await refreshAfterMutation();
 
       return updatedCard;
     },
-    [token],
+    [refreshAfterMutation, token],
   );
 
   const deleteCard = useCallback(async (userCardId: number) => {
@@ -84,10 +99,11 @@ export function useUserCards(token?: string | null) {
           card.id === userCardId ? updatedCard : card,
         ),
       );
+      await refreshAfterMutation();
 
       return createdBlock;
     },
-    [token],
+    [refreshAfterMutation, token],
   );
 
   const updateBlock = useCallback(
@@ -109,10 +125,11 @@ export function useUserCards(token?: string | null) {
           card.id === userCardId ? updatedCard : card,
         ),
       );
+      await refreshAfterMutation();
 
       return updatedBlock;
     },
-    [token],
+    [refreshAfterMutation, token],
   );
 
   const deleteBlock = useCallback(

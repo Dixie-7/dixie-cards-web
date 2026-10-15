@@ -1,0 +1,20 @@
+.particles-background {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particles-background--preview {
+  z-index: 0;
+}
+
+.particles-background,
+.particles-background > div,
+.particles-background canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.particles-background canvas {
+  position: absolute !important;
+  inset: 0;
+}

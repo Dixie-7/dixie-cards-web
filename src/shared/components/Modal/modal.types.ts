@@ -8,7 +8,7 @@ export interface BaseModalProps {
   description?: string;
   closeOnOverlayClick?: boolean;
   showCloseButton?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   initialFocusRef?: RefObject<HTMLElement | null>;
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }

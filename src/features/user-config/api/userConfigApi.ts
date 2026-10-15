@@ -5,6 +5,10 @@ import {
   type UserConfigPayload,
 } from '@/features/user-config/types/userConfig.types';
 import {
+  cloneParticlesConfig,
+  normalizeUserParticlesConfig,
+} from '@/features/user-config/services/particlesConfigNormalizer';
+import {
   apiClient,
   getResponseMessage,
   isMockEnabled,
@@ -27,7 +31,12 @@ export function createDefaultUserConfig(userId = 7): UserConfigDto {
 }
 
 function cloneConfig(config: UserConfigDto) {
-  return { ...config };
+  return {
+    ...config,
+    particles: config.particles
+      ? cloneParticlesConfig(config.particles)
+      : null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,6 +97,20 @@ function readBoolean(
   return undefined;
 }
 
+function readNullableString(
+  record: Record<string, unknown>,
+  camelKey: string,
+  pascalKey: string,
+) {
+  const value = readValue(record, camelKey, pascalKey);
+
+  if (value === null) {
+    return null;
+  }
+
+  return typeof value === 'string' ? value : undefined;
+}
+
 function normalizeUserConfig(
   value: unknown,
   userIdFallback: number,
@@ -99,6 +122,15 @@ function normalizeUserConfig(
   return {
     id: readNumber(value, 'id', 'Id') ?? 0,
     userId: readNumber(value, 'userId', 'UserId') ?? userIdFallback,
+    songUrl:
+      readNullableString(value, 'songUrl', 'SongUrl') ??
+      defaultUserConfigPayload.songUrl,
+    showSong:
+      readBoolean(value, 'showSong', 'ShowSong') ??
+      defaultUserConfigPayload.showSong,
+    particles: normalizeUserParticlesConfig(
+      readValue(value, 'particles', 'Particles'),
+    ),
     showProjectsSection:
       readBoolean(value, 'showProjectsSection', 'ShowProjectsSection') ??
       defaultUserConfigPayload.showProjectsSection,
@@ -114,6 +146,9 @@ function normalizeUserConfig(
     showCardsSection:
       readBoolean(value, 'showCardsSection', 'ShowCardsSection') ??
       defaultUserConfigPayload.showCardsSection,
+    showCardNumber:
+      readBoolean(value, 'showCardNumber', 'ShowCardNumber') ??
+      defaultUserConfigPayload.showCardNumber,
     showCv:
       readBoolean(value, 'showCv', 'ShowCv') ??
       defaultUserConfigPayload.showCv,
@@ -187,6 +222,9 @@ function createUserConfigFromPayload(
     id,
     userId,
     ...payload,
+    particles: payload.particles
+      ? cloneParticlesConfig(payload.particles)
+      : null,
   };
 }
 

@@ -48,6 +48,22 @@ export function useUserConfig(token?: string | null, currentUserId = 7) {
 
       setConfig(updatedConfig);
 
+      try {
+        const persistedConfig = await userConfigApi.getUserConfig(
+          token,
+          currentUserId,
+        );
+        setConfig(persistedConfig);
+        setError(null);
+        return persistedConfig;
+      } catch (unknownError) {
+        setError(
+          unknownError instanceof Error
+            ? unknownError.message
+            : 'No se pudo refrescar la configuracion guardada.',
+        );
+      }
+
       return updatedConfig;
     },
     [config.id, currentUserId, token],

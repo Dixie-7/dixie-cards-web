@@ -1,104 +1,79 @@
-import { useEffect, useState } from 'react';
-import Particles, {
-  initParticlesEngine,
-  type IParticlesProps,
-} from '@tsparticles/react';
+import { useMemo, useState, useEffect, useId } from 'react';
+import { useReducedMotion } from 'motion/react';
+import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
+import { mapUserParticlesConfigToOptions } from '@/features/user-config/mappers/particlesConfig.mapper';
+import type { UserParticlesConfig } from '@/features/user-config/types/userConfig.types';
+import './ParticlesBackground.css';
 
-const particlesOptions: NonNullable<IParticlesProps['options']> = {
-  fullScreen: false,
+let particlesEnginePromise: Promise<void> | null = null;
 
-  background: {
-    color: 'transparent',
-  },
+function initializeParticlesEngine() {
+  if (!particlesEnginePromise) {
+    particlesEnginePromise = initParticlesEngine(async (engine) => {
+      await loadSlim(engine);
+    });
+  }
 
-  fpsLimit: 60,
+  return particlesEnginePromise;
+}
 
-  particles: {
-    number: {
-      value: 45,
-      density: {
-        enable: true,
-      },
-    },
+interface ParticlesBackgroundProps {
+  config?: UserParticlesConfig | null;
+  id?: string;
+  className?: string;
+  preview?: boolean;
+}
 
-    color: {
-      value: ['#a855f7', '#c084fc', '#ffffff'],
-    },
-
-    links: {
-      enable: false,
-    },
-
-    move: {
-      enable: true,
-      speed: 0.45,
-      direction: 'none',
-      random: true,
-      straight: false,
-      outModes: {
-        default: 'out',
-      },
-    },
-
-    opacity: {
-      value: 0.18,
-    },
-
-    size: {
-      value: { min: 1, max: 3 },
-    },
-  },
-
-  interactivity: {
-    events: {
-      onHover: {
-        enable: true,
-        mode: 'repulse',
-      },
-    },
-
-    modes: {
-      repulse: {
-        distance: 80,
-        duration: 0.4,
-      },
-    },
-  },
-
-  detectRetina: true,
-};
-
-const ParticlesBackground = () => {
+export default function ParticlesBackground({
+  config,
+  id,
+  className = '',
+  preview = false,
+}: ParticlesBackgroundProps) {
+  const generatedId = useId().replace(/:/g, '');
+  const shouldReduceMotion = useReducedMotion() ?? false;
   const [isReady, setIsReady] = useState(false);
+  const options = useMemo(
+    () =>
+      config
+        ? mapUserParticlesConfigToOptions(config, shouldReduceMotion)
+        : undefined,
+    [config, shouldReduceMotion],
+  );
 
   useEffect(() => {
     let isMounted = true;
 
-    void initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      if (isMounted) {
-        setIsReady(true);
-      }
-    });
+    void initializeParticlesEngine()
+      .then(() => {
+        if (isMounted) {
+          setIsReady(true);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsReady(false);
+        }
+      });
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  if (!isReady) {
+  if (!config?.enabled || !isReady || !options) {
     return null;
   }
 
   return (
     <Particles
-      id="tsparticles"
-      options={particlesOptions}
-      className="absolute inset-0 -z-10"
+      id={id ?? `particles-${generatedId}`}
+      options={options}
+      className={`particles-background absolute inset-0 overflow-hidden ${
+        preview ? 'particles-background--preview' : ''
+      } ${className}`}
+      aria-hidden="true"
     />
   );
-};
-
-export default ParticlesBackground;
+}

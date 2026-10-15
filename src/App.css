@@ -1,6 +1,8 @@
 .app-shell {
   --app-content-max-width: 76.8rem;
 
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-height: 100svh;
@@ -8,6 +10,13 @@
   background:
     linear-gradient(180deg, rgba(6, 182, 212, 0.08), transparent 320px),
     var(--bg);
+}
+
+/* Keep the tsParticles canvas above the shell background and below the
+   portfolio UI. The shell is a flex container, so its direct children can
+   establish their stacking order without changing their positioning mode. */
+.app-shell > :not(.particles-background):not(.floating-navbar) {
+  z-index: 1;
 }
 
 .floating-navbar {

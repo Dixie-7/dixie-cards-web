@@ -17,6 +17,7 @@ import { defaultUserConfigPayload } from '@/features/user-config/types/userConfi
 import FloatingNavbar, {
   type FloatingNavbarItem,
 } from '@/shared/components/FloatingNavbar';
+import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
 
 const publicContactVisibility = {
   ...defaultUserConfigPayload,
@@ -138,6 +139,11 @@ function PublicPortfolioPage() {
 
   return (
     <main id="home" className="app-shell">
+      <ParticlesBackground
+        id={`public-portfolio-particles-${portfolio.username}`}
+        config={portfolio.particles}
+      />
+
       <FloatingNavbar
         brandHref="/"
         authenticatedPrimaryLabel="Mi portfolio"
@@ -170,7 +176,10 @@ function PublicPortfolioPage() {
 
       {portfolioCards.length > 0 && (
         <div id="dcards" className="app-section-anchor">
-          <UserCardsSection cards={portfolioCards} />
+          <UserCardsSection
+            cards={portfolioCards}
+            showCardNumber={portfolio.showCardNumber}
+          />
         </div>
       )}
 

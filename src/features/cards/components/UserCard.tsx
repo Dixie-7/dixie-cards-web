@@ -13,6 +13,7 @@ interface UserCardProps {
   className?: string;
   actions?: ReactNode;
   renderBlockActions?: (block: UserCardBlockDto) => ReactNode;
+  showCardNumber?: boolean;
 }
 
 const cardTemplateStyles = {
@@ -47,6 +48,7 @@ export default function UserCard({
   className = '',
   actions,
   renderBlockActions,
+  showCardNumber = true,
 }: UserCardProps) {
   const sortedBlocks = [...card.blocks].sort(
     (currentBlock, nextBlock) => currentBlock.sortOrder - nextBlock.sortOrder,
@@ -74,9 +76,11 @@ export default function UserCard({
         </div>
       )}
       <header className="mb-7" data-card-header>
-        <p className={templateStyles.eyebrow}>
-          User #{card.userId} / Card #{card.id} / {card.width}% width
-        </p>
+        {showCardNumber && (
+          <p className={templateStyles.eyebrow}>
+            Card #{card.sortOrder}
+          </p>
+        )}
         <h2
           className={templateStyles.title}
           data-card-title
