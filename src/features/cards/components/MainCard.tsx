@@ -70,7 +70,7 @@ export default function MainCard({
       }}
     >
       {actions && (
-        <div className="absolute right-4 top-4 z-10 flex gap-1.5">
+        <div className="mb-3 flex justify-end gap-1.5">
           {actions}
         </div>
       )}
