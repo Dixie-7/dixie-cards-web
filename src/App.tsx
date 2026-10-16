@@ -5,9 +5,11 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useParams,
 } from 'react-router-dom';
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'));
 const PortfolioPage = lazy(
@@ -39,6 +41,23 @@ function PublicPortfolioRoute() {
   return <PublicPortfolioPage />;
 }
 
+function ProtectedPortfolioRoute() {
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/"
+        replace
+        state={{ authMode: 'login', returnTo: location.pathname }}
+      />
+    );
+  }
+
+  return <PortfolioPage />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -56,7 +75,7 @@ function App() {
           <Route path="/" element={withAuthProvider(<LandingPage />)} />
           <Route
             path="/portfolio"
-            element={withAuthProvider(<PortfolioPage />)}
+            element={withAuthProvider(<ProtectedPortfolioRoute />)}
           />
           <Route
             path="/:username"

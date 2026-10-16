@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import LoginModal from '@/features/auth/components/LoginModal';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
@@ -16,12 +16,32 @@ import { landingParticlesConfig } from '../landingParticlesConfig';
 import type { AuthEntryMode, LandingLanguage } from '../landing.types';
 import '../styles/landing.css';
 
+interface LandingNavigationState {
+  authMode?: AuthEntryMode;
+  returnTo?: string;
+}
+
 function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
+  const navigationState = location.state as LandingNavigationState | null;
+  const redirectedAuthMode =
+    navigationState?.authMode === 'login' ||
+    navigationState?.authMode === 'register'
+      ? navigationState.authMode
+      : null;
+  const returnTo =
+    navigationState?.returnTo === '/portfolio'
+      ? navigationState.returnTo
+      : null;
   const [language, setLanguage] = useState<LandingLanguage>('es');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthEntryMode>('register');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(
+    Boolean(redirectedAuthMode),
+  );
+  const [authMode, setAuthMode] = useState<AuthEntryMode>(
+    redirectedAuthMode ?? 'register',
+  );
   const [authModalKey, setAuthModalKey] = useState(0);
   const content = landingContent[language];
 
@@ -76,6 +96,11 @@ function LandingPage() {
           isOpen={isAuthModalOpen}
           initialMode={authMode}
           onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={() => {
+          if (returnTo) {
+            navigate(returnTo, { replace: true });
+          }
+        }}
         />
       </div>
     </main>

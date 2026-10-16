@@ -17,6 +17,7 @@ import BaseModal from '@/shared/components/Modal/BaseModal';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
   initialMode?: AuthMode;
   restoreFocusRef?: React.RefObject<HTMLElement | null>;
 }
@@ -54,6 +55,7 @@ function validateRegisterForm(
 const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
+  onLoginSuccess,
   initialMode = 'login',
   restoreFocusRef,
 }) => {
@@ -124,6 +126,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       setUsernameOrEmail('');
       setLoginPassword('');
       onClose();
+      onLoginSuccess?.();
     } catch (unknownError) {
       setLoginPassword('');
       setErrors({

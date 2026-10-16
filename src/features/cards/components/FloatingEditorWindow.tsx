@@ -6,6 +6,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 interface FloatingEditorWindowProps {
   title: string;
@@ -198,9 +199,10 @@ export default function FloatingEditorWindow({
     setDragState(null);
   };
 
-  return (
+  const editor = (
     <aside
       ref={panelRef}
+      data-slot="floating-editor"
       className="fixed z-50 flex max-h-[calc(100vh-2rem)] w-[calc(100vw_-_2rem)] max-w-[29rem] flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white text-left shadow-2xl shadow-zinc-950/20 dark:border-zinc-800 dark:bg-zinc-950 dark:shadow-black/40"
       style={{
         left: position?.x ?? viewportPadding,
@@ -240,4 +242,8 @@ export default function FloatingEditorWindow({
       </div>
     </aside>
   );
+
+  return typeof document === 'undefined'
+    ? null
+    : createPortal(editor, document.body);
 }
