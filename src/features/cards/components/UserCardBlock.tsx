@@ -28,6 +28,7 @@ import {
 interface UserCardBlockProps {
   block: UserCardBlockDto;
   actions?: ReactNode;
+  showMetadata?: boolean;
 }
 
 const blockIconMap = {
@@ -314,7 +315,11 @@ function getSafeWidth(width: number) {
   return Math.min(Math.max(width, 0), 100);
 }
 
-export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
+export default function UserCardBlock({
+  block,
+  actions,
+  showMetadata = false,
+}: UserCardBlockProps) {
   const normalizedType = block.type.trim().toLowerCase();
   const normalizedTemplate = block.template?.trim().toLowerCase() ?? 'default';
   const normalizedIcon = block.icon?.trim().toLowerCase() ?? '';
@@ -326,7 +331,8 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
   const listItems = normalizedType === 'list' ? getListItems(block.content) : [];
   const isImageBlock = normalizedType === 'media' || normalizedType === 'image';
   const isVideoBlock = normalizedType === 'video';
-  const hasHeaderContent = Boolean(block.title) || templateStyles.showEyebrow;
+  const hasHeaderContent =
+    Boolean(block.title) || (showMetadata && templateStyles.showEyebrow);
   const showIcon = templateStyles.showIcon && normalizedIcon !== 'none';
   const verticalAlign =
     getPlacementClassFromStyleText(block.styleText) ||
@@ -376,7 +382,7 @@ export default function UserCardBlock({ block, actions }: UserCardBlockProps) {
                   {block.title}
                 </h3>
               )}
-              {templateStyles.showEyebrow && (
+              {showMetadata && templateStyles.showEyebrow && (
                 <p className={templateStyles.eyebrow}>
                   {block.type}
                   {block.template ? ` / ${block.template}` : ''}

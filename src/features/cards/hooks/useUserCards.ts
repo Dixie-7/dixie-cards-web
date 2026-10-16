@@ -87,21 +87,8 @@ export function useUserCards(token?: string | null) {
 
   const createBlock = useCallback(
     async (userCardId: number, payload: UserCardBlockPayload) => {
-      const { block: createdBlock, card: updatedCard } =
-        await cardApi.createUserCardBlock(
-          userCardId,
-          payload,
-          token,
-        );
-
-      setCards((currentCards) =>
-        currentCards.map((card) =>
-          card.id === userCardId ? updatedCard : card,
-        ),
-      );
-      await refreshAfterMutation();
-
-      return createdBlock;
+      await cardApi.createUserCardBlock(userCardId, payload, token);
+      void refreshAfterMutation();
     },
     [refreshAfterMutation, token],
   );
@@ -112,22 +99,28 @@ export function useUserCards(token?: string | null) {
       userCardBlockId: number,
       payload: UserCardBlockPayload,
     ) => {
-      const { block: updatedBlock, card: updatedCard } =
-        await cardApi.updateUserCardBlock(
-          userCardId,
-          userCardBlockId,
-          payload,
-          token,
-        );
+      await cardApi.updateUserCardBlock(
+        userCardId,
+        userCardBlockId,
+        payload,
+        token,
+      );
 
       setCards((currentCards) =>
         currentCards.map((card) =>
-          card.id === userCardId ? updatedCard : card,
+          card.id === userCardId
+            ? {
+                ...card,
+                blocks: card.blocks.map((block) =>
+                  block.id === userCardBlockId
+                    ? { ...block, ...payload }
+                    : block,
+                ),
+              }
+            : card,
         ),
       );
-      await refreshAfterMutation();
-
-      return updatedBlock;
+      void refreshAfterMutation();
     },
     [refreshAfterMutation, token],
   );

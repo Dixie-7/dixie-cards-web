@@ -117,9 +117,7 @@ export default function SkillsSection({
                         <h3 className="text-xl font-semibold text-zinc-950 dark:text-white">
                           {skill.skillName}
                         </h3>
-                        <span className="rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                          Orden {skill.sortOrder}
-                        </span>
+                 
                       </div>
 
                       {skill.skillDescription && (

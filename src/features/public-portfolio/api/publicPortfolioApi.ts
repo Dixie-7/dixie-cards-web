@@ -567,7 +567,7 @@ export async function getPublicPortfolio(username: string) {
     throw new Error(
       getResponseMessage(
         response.data,
-        `No se pudo cargar el portfolio publico. Estado HTTP ${response.status}.`,
+        `The public portfolio cannot be loaded. HTTP Status: ${response.status}.`,
       ),
     );
   }
@@ -575,7 +575,7 @@ export async function getPublicPortfolio(username: string) {
   const portfolio = normalizePublicPortfolio(response.data);
 
   if (!portfolio) {
-    throw new Error('El servidor devolvio un portfolio publico invalido.');
+    throw new Error('The server returned an invalid public portfolio.');
   }
 
   return portfolio;

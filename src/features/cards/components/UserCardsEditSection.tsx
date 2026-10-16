@@ -157,6 +157,7 @@ export default function UserCardsEditSection({
                       actions={cardActions}
                       manageWidth={false}
                       renderBlockActions={renderBlockActions}
+                      showBlockMetadata
                       standalone={false}
                     />
                   ) : (
@@ -164,6 +165,8 @@ export default function UserCardsEditSection({
                       card={card}
                       actions={cardActions}
                       renderBlockActions={renderBlockActions}
+                      showCardNumber
+                      showBlockMetadata
                     />
                   )}
                 </div>

@@ -12,6 +12,9 @@ import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'));
+const LearnDixiePage = lazy(
+  () => import('@/features/learn/pages/LearnDixiePage'),
+);
 const PortfolioPage = lazy(
   () => import('@/features/portfolio/pages/PortfolioPage'),
 );
@@ -22,6 +25,7 @@ const PublicPortfolioPage = lazy(
 const reservedPublicUsernames = new Set([
   'dashboard',
   'login',
+  'learn',
   'portfolio',
   'settings',
   'verify-email',
@@ -73,6 +77,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={withAuthProvider(<LandingPage />)} />
+          <Route path="/learn" element={<LearnDixiePage />} />
           <Route
             path="/portfolio"
             element={withAuthProvider(<ProtectedPortfolioRoute />)}

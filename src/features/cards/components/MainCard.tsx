@@ -12,6 +12,7 @@ interface MainCardProps {
   actions?: ReactNode;
   manageWidth?: boolean;
   renderBlockActions?: (block: UserCardBlockDto) => ReactNode;
+  showBlockMetadata?: boolean;
   standalone?: boolean;
 }
 
@@ -48,6 +49,7 @@ export default function MainCard({
   actions,
   manageWidth = true,
   renderBlockActions,
+  showBlockMetadata = false,
   standalone = true,
 }: MainCardProps) {
   const sortedBlocks = [...card.blocks].sort(
@@ -80,6 +82,7 @@ export default function MainCard({
             key={block.id}
             block={block}
             actions={renderBlockActions?.(block)}
+            showMetadata={showBlockMetadata}
           />
         ))}
       </div>

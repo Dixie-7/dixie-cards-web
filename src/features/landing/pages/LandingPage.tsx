@@ -9,6 +9,7 @@ import { HeroSection } from '../components/HeroSection';
 import { HowItWorksSection } from '../components/HowItWorksSection';
 import { LandingFooter } from '../components/LandingFooter';
 import { LandingHeader } from '../components/LandingHeader';
+import { LearnDixieSection } from '../components/LearnDixieSection';
 import { PortfolioPreviewSection } from '../components/PortfolioPreviewSection';
 import { PossibilitiesSection } from '../components/PossibilitiesSection';
 import { landingContent } from '../landingContent';
@@ -84,6 +85,10 @@ function LandingPage() {
         <PossibilitiesSection content={content.possibilities} />
         <CustomizationSection content={content.customization} />
         <HowItWorksSection content={content.process} />
+        <LearnDixieSection
+          content={content.learn}
+          onLearn={() => navigate('/learn')}
+        />
         <PortfolioPreviewSection content={content.preview} />
         <FinalCtaSection
           content={content.finalCta}
@@ -96,11 +101,11 @@ function LandingPage() {
           isOpen={isAuthModalOpen}
           initialMode={authMode}
           onClose={() => setIsAuthModalOpen(false)}
-        onLoginSuccess={() => {
-          if (returnTo) {
-            navigate(returnTo, { replace: true });
-          }
-        }}
+          onLoginSuccess={() => {
+            if (returnTo) {
+              navigate(returnTo, { replace: true });
+            }
+          }}
         />
       </div>
     </main>

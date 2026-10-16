@@ -178,7 +178,6 @@ function PortfolioPage() {
             isEditMode={isEditMode}
             isLoading={isLoading}
             error={error}
-            showCardNumber={userConfig.showCardNumber}
             onCreateCard={createCard}
             onUpdateCard={updateCard}
             onDeleteCard={deleteCard}

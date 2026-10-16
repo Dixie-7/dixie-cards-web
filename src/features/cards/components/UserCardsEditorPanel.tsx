@@ -51,7 +51,6 @@ interface UserCardsEditorPanelProps {
   isEditMode: boolean;
   isLoading: boolean;
   error: string | null;
-  showCardNumber?: boolean;
   onCreateCard: (payload: UserCardPayload) => Promise<UserCardDto>;
   onUpdateCard: (
     userCardId: number,
@@ -61,12 +60,12 @@ interface UserCardsEditorPanelProps {
   onCreateBlock: (
     userCardId: number,
     payload: UserCardBlockPayload,
-  ) => Promise<UserCardBlockDto>;
+  ) => Promise<void>;
   onUpdateBlock: (
     userCardId: number,
     userCardBlockId: number,
     payload: UserCardBlockPayload,
-  ) => Promise<UserCardBlockDto>;
+  ) => Promise<void>;
   onDeleteBlock: (
     userCardId: number,
     userCardBlockId: number,
@@ -690,7 +689,6 @@ export default function UserCardsEditorPanel({
   isEditMode,
   isLoading,
   error,
-  showCardNumber = true,
   onCreateCard,
   onUpdateCard,
   onDeleteCard,
@@ -896,18 +894,19 @@ export default function UserCardsEditorPanel({
       setMutationError('');
 
       const payload = getBlockPayload(blockDraft);
-      const savedBlock =
-        blockEditor.mode === 'create'
-          ? await onCreateBlock(blockEditor.cardId, payload)
-          : await onUpdateBlock(
-              blockEditor.cardId,
-              blockEditor.blockId,
-              payload,
-            );
+      if (blockEditor.mode === 'create') {
+        await onCreateBlock(blockEditor.cardId, payload);
+      } else {
+        await onUpdateBlock(
+          blockEditor.cardId,
+          blockEditor.blockId,
+          payload,
+        );
+      }
 
       setBlockEditor(null);
       setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
-      const message = `Block "${savedBlock.title ?? savedBlock.type}" guardado.`;
+      const message = 'Block guardado correctamente.';
       setStatusMessage(message);
       onFeedback?.(message, 'success');
     } catch (unknownError) {
@@ -1023,12 +1022,7 @@ export default function UserCardsEditorPanel({
     cardEditor !== null ? closeCardEditor : closeBlockEditor;
 
   if (!isEditMode) {
-    return (
-      <UserCardsSection
-        cards={displayCards}
-        showCardNumber={showCardNumber}
-      />
-    );
+    return <UserCardsSection cards={displayCards} />;
   }
 
   return (
@@ -1090,7 +1084,11 @@ export default function UserCardsEditorPanel({
                 className={`p-2.5 ${getHorizontalPlacementClassFromStyleText(cardPreview.styleText)}`}
                 style={{ width: `${getSafeWidth(cardPreview.width)}%` }}
               >
-                <UserCard card={cardPreview} />
+                <UserCard
+                  card={cardPreview}
+                  showCardNumber
+                  showBlockMetadata
+                />
               </div>
             </div>
           </div>

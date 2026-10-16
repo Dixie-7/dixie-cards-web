@@ -62,6 +62,14 @@ export interface LandingContent {
       description: string;
     }>;
   };
+  learn: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    tutorialLabel: string;
+    storyLabel: string;
+    button: string;
+  };
   preview: {
     eyebrow: string;
     title: string;

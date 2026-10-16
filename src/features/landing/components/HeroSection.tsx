@@ -5,6 +5,12 @@ import {
   EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import { motion, useReducedMotion } from 'motion/react';
+import {
+  landingDemoCards,
+  landingDemoMainCard,
+  landingDemoProject,
+  landingDemoSkills,
+} from '../landingDemoData';
 import type { LandingContent } from '../landing.types';
 
 interface HeroSectionProps {
@@ -14,6 +20,11 @@ interface HeroSectionProps {
 
 function HeroPortfolioMockup({ content }: { content: LandingContent['hero'] }) {
   const shouldReduceMotion = useReducedMotion();
+  const presentationBlock = landingDemoMainCard.blocks[0];
+  const technologies = landingDemoProject.technologies
+    .split(';')
+    .map((technology) => technology.trim())
+    .slice(0, 3);
 
   return (
     <motion.div
@@ -41,18 +52,18 @@ function HeroPortfolioMockup({ content }: { content: LandingContent['hero'] }) {
         <div className="hero-portfolio__body">
           <div className="hero-profile-card">
             <div className="hero-profile-card__top">
-              <div className="demo-avatar">AL</div>
+              <div className="demo-avatar">SR</div>
               <span className="status-chip">
                 <i /> {content.available}
               </span>
             </div>
             <div>
-              <span className="demo-kicker">HELLO, I’M</span>
-              <h3>Alex Luna</h3>
-              <p>{content.role}</p>
+              <span className="demo-kicker">MAIN CARD / 3 BLOCKS</span>
+              <h3>{presentationBlock.title}</h3>
+              <p>{presentationBlock.content}</p>
             </div>
             <div className="hero-profile-card__footer">
-              <span>Buenos Aires / AR</span>
+              <span>FEATURE · 100%</span>
               <ArrowUpRightIcon />
             </div>
           </div>
@@ -64,22 +75,29 @@ function HeroPortfolioMockup({ content }: { content: LandingContent['hero'] }) {
                 <span className="demo-project-card__shape demo-project-card__shape--two" />
                 <span className="demo-project-card__shape demo-project-card__shape--three" />
               </div>
-              <span className="demo-kicker">{content.projectLabel}</span>
-              <strong>{content.projectTitle}</strong>
+              <span className="demo-kicker">
+                {content.projectLabel} / {landingDemoProject.status}
+              </span>
+              <strong>{landingDemoProject.name}</strong>
+              <div className="demo-project-card__technologies">
+                {technologies.map((technology) => (
+                  <span key={technology}>{technology}</span>
+                ))}
+              </div>
             </div>
 
             <div className="demo-mini-grid">
               <div className="demo-skills-card">
                 <span className="demo-kicker">{content.skillsLabel}</span>
                 <div>
-                  <span>Figma</span>
-                  <span>React</span>
-                  <span>Motion</span>
+                  {landingDemoSkills.slice(0, 3).map((skill) => (
+                    <span key={skill.id}>{skill.skillName}</span>
+                  ))}
                 </div>
               </div>
               <div className="demo-contact-card">
                 <EnvelopeIcon />
-                <span>{content.contactLabel}</span>
+                <span>{content.contactLabel} / USER CONTACT</span>
               </div>
             </div>
           </div>
@@ -95,8 +113,8 @@ function HeroPortfolioMockup({ content }: { content: LandingContent['hero'] }) {
           <CheckIcon />
         </span>
         <span>
-          <small>SECTION</small>
-          Projects published
+          <small>MAIN CARD</small>
+          {landingDemoMainCard.blocks.length} content blocks
         </span>
       </motion.div>
 
@@ -105,8 +123,8 @@ function HeroPortfolioMockup({ content }: { content: LandingContent['hero'] }) {
         animate={shouldReduceMotion ? undefined : { y: [0, 7, 0] }}
         transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <span>8</span>
-        <small>CARDS</small>
+        <span>{landingDemoCards.length}</span>
+        <small>USER CARDS</small>
       </motion.div>
     </motion.div>
   );

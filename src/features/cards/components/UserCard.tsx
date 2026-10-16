@@ -14,6 +14,7 @@ interface UserCardProps {
   actions?: ReactNode;
   renderBlockActions?: (block: UserCardBlockDto) => ReactNode;
   showCardNumber?: boolean;
+  showBlockMetadata?: boolean;
 }
 
 const cardTemplateStyles = {
@@ -48,7 +49,8 @@ export default function UserCard({
   className = '',
   actions,
   renderBlockActions,
-  showCardNumber = true,
+  showCardNumber = false,
+  showBlockMetadata = false,
 }: UserCardProps) {
   const sortedBlocks = [...card.blocks].sort(
     (currentBlock, nextBlock) => currentBlock.sortOrder - nextBlock.sortOrder,
@@ -105,6 +107,7 @@ export default function UserCard({
             key={block.id}
             block={block}
             actions={renderBlockActions?.(block)}
+            showMetadata={showBlockMetadata}
           />
         ))}
       </div>

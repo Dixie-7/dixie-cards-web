@@ -34,36 +34,36 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       eyebrow: 'Todo en un solo lugar',
       title: 'Mucho más que una presentación bonita.',
       description:
-        'Cada bloque cuenta una parte distinta de tu historia. Elegí qué mostrar y construí una narrativa profesional con ritmo propio.',
+        'Proyectos, cards y datos profesionales reales, organizados en un portfolio público que podés actualizar cuando quieras.',
       items: [
         {
           title: 'Proyectos',
-          description: 'Casos visuales con contexto, imágenes y tecnologías.',
+          description: 'Imágenes, estado, descripción, colaboradores y tecnologías.',
           detail: '01 / Trabajo',
         },
         {
           title: 'Skills',
-          description: 'Herramientas y fortalezas fáciles de recorrer.',
+          description: 'Nombre, icono, color, descripción y una nota propia.',
           detail: '02 / Expertise',
         },
         {
           title: 'Idiomas',
-          description: 'Niveles claros, sin llenar la pantalla de datos.',
+          description: 'Nivel y porcentaje configurables para cada idioma.',
           detail: '03 / Comunicación',
         },
         {
           title: 'Contenido propio',
-          description: 'Experiencia, procesos, logros o cualquier historia.',
+          description: 'Cards con bloques de texto, listas, imágenes, video y citas.',
           detail: '04 / Tu formato',
         },
         {
           title: 'Contacto',
-          description: 'Tus canales importantes, siempre a mano.',
+          description: 'Email, teléfono, web y tus redes profesionales.',
           detail: '05 / Conexión',
         },
         {
           title: 'CV',
-          description: 'Tu recorrido profesional disponible en un clic.',
+          description: 'Un archivo principal listo para abrir o descargar.',
           detail: '06 / Trayectoria',
         },
       ],
@@ -72,22 +72,22 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       eyebrow: 'Tu espacio, tus reglas',
       title: 'Una estructura flexible que se adapta a vos.',
       description:
-        'Ordená, activá y combiná contenido sin perder consistencia visual. Cada portfolio parte del mismo sistema, pero termina contando una historia distinta.',
+        'Elegí qué secciones publicar y construí cards a tu medida con templates, anchos, estilos y bloques combinables.',
       bullets: [
-        'Reordená secciones según tu objetivo',
-        'Activá solo lo que suma a tu perfil',
-        'Combiná texto, imágenes y bloques propios',
+        'Ordená cards, bloques, proyectos, skills e idiomas',
+        'Activá solo las secciones y datos que quieras mostrar',
+        'Combiná texto, listas, imágenes, video y citas',
       ],
       panelLabel: 'Editor de portfolio',
       liveLabel: 'Cambios guardados',
       sections: [
-        { label: 'Presentación', enabled: true },
         { label: 'Proyectos', enabled: true },
-        { label: 'Experiencia', enabled: false },
-        { label: 'Skills & herramientas', enabled: true },
+        { label: 'Cards personalizadas', enabled: true },
+        { label: 'Skills e idiomas', enabled: true },
+        { label: 'Contacto y CV', enabled: false },
       ],
-      cardTitle: 'Sobre mi proceso',
-      cardDescription: 'Un bloque personalizado con texto + imagen.',
+      cardTitle: 'Experiencia frontend',
+      cardDescription: 'Template feature · 50% · texto + lista',
       addBlock: 'Agregar bloque',
     },
     process: {
@@ -103,21 +103,30 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
         {
           number: '02',
           title: 'Completá tu portfolio',
-          description: 'Sumá proyectos, skills, idiomas, CV y cards propias.',
+          description: 'Creá tu MainCard y sumá proyectos, skills, idiomas, CV y cards.',
         },
         {
           number: '03',
           title: 'Compartilo',
-          description: 'Publicá un perfil claro, memorable y siempre actualizado.',
+          description: 'Compartí tu URL pública y actualizá el contenido cuando quieras.',
         },
       ],
+    },
+    learn: {
+      eyebrow: 'Dos videos, una mirada completa',
+      title: 'Conocé Dixie Cards por dentro.',
+      description:
+        'Aprendé a crear tu portfolio paso a paso y descubrí las decisiones de producto y desarrollo detrás de la plataforma.',
+      tutorialLabel: 'Tutorial del producto',
+      storyLabel: 'Cómo se construyó',
+      button: 'Teach me about Dixie Cards',
     },
     preview: {
       eyebrow: 'Esto podría ser tuyo',
       title: 'Un portfolio que se entiende antes de empezar a leer.',
       description:
-        'Jerarquía, personalidad y contenido real trabajando juntos. Esta demo usa datos ficticios para mostrar el tipo de experiencia que podés construir.',
-      browserLabel: 'dixie.cards/alex',
+        'Esta demo usa las mismas estructuras que el producto: MainCard, proyectos, UserCards, skills, idiomas y contacto.',
+      browserLabel: 'dixie.cards/sofia.rios',
       profileRole: 'Creative developer',
       profileBio:
         'Diseño y construyo experiencias digitales donde la tecnología se siente humana.',
@@ -187,36 +196,36 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       eyebrow: 'Everything in one place',
       title: 'Much more than a polished introduction.',
       description:
-        'Every block tells a different part of your story. Choose what to show and build a professional narrative with a rhythm of its own.',
+        'Real projects, cards and professional details organized into a public portfolio you can update whenever you want.',
       items: [
         {
           title: 'Projects',
-          description: 'Visual case studies with context, imagery and technologies.',
+          description: 'Images, status, description, collaborators and technologies.',
           detail: '01 / Work',
         },
         {
           title: 'Skills',
-          description: 'Tools and strengths that are easy to scan.',
+          description: 'Name, icon, color, description and your own note.',
           detail: '02 / Expertise',
         },
         {
           title: 'Languages',
-          description: 'Clear proficiency without overwhelming the page.',
+          description: 'A configurable level and percentage for every language.',
           detail: '03 / Communication',
         },
         {
           title: 'Custom content',
-          description: 'Experience, process, achievements or any story.',
+          description: 'Cards with text, list, image, video and quote blocks.',
           detail: '04 / Your format',
         },
         {
           title: 'Contact',
-          description: 'Your most important channels, always within reach.',
+          description: 'Email, phone, website and professional networks.',
           detail: '05 / Connection',
         },
         {
           title: 'Resume',
-          description: 'Your professional journey available in one click.',
+          description: 'A primary file ready to open or download.',
           detail: '06 / Experience',
         },
       ],
@@ -225,22 +234,22 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       eyebrow: 'Your space, your rules',
       title: 'A flexible structure that adapts to you.',
       description:
-        'Reorder, enable and combine content without losing visual consistency. Every portfolio starts with the same system and ends with a different story.',
+        'Choose which sections to publish and build cards with templates, widths, styles and composable blocks.',
       bullets: [
-        'Reorder sections around your goal',
-        'Enable only what strengthens your profile',
-        'Combine copy, imagery and custom blocks',
+        'Order cards, blocks, projects, skills and languages',
+        'Enable only the sections and details you want to show',
+        'Combine text, lists, images, video and quotes',
       ],
       panelLabel: 'Portfolio editor',
       liveLabel: 'Changes saved',
       sections: [
-        { label: 'Introduction', enabled: true },
         { label: 'Projects', enabled: true },
-        { label: 'Experience', enabled: false },
-        { label: 'Skills & tools', enabled: true },
+        { label: 'Custom cards', enabled: true },
+        { label: 'Skills & languages', enabled: true },
+        { label: 'Contact & resume', enabled: false },
       ],
-      cardTitle: 'About my process',
-      cardDescription: 'A custom block with copy + image.',
+      cardTitle: 'Frontend experience',
+      cardDescription: 'Feature template · 50% · text + list',
       addBlock: 'Add block',
     },
     process: {
@@ -256,21 +265,30 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
         {
           number: '02',
           title: 'Build your portfolio',
-          description: 'Add projects, skills, languages, a resume and custom cards.',
+          description: 'Create your MainCard and add projects, skills, languages, a resume and cards.',
         },
         {
           number: '03',
           title: 'Share it',
-          description: 'Publish a clear, memorable profile that stays up to date.',
+          description: 'Share your public URL and update the content whenever you want.',
         },
       ],
+    },
+    learn: {
+      eyebrow: 'Two videos, the complete picture',
+      title: 'Get to know Dixie Cards from the inside.',
+      description:
+        'Learn how to build your portfolio step by step and explore the product and development decisions behind the platform.',
+      tutorialLabel: 'Product tutorial',
+      storyLabel: 'How it was built',
+      button: 'Teach me about Dixie Cards',
     },
     preview: {
       eyebrow: 'This could be yours',
       title: 'A portfolio you understand before you start reading.',
       description:
-        'Hierarchy, personality and real content working together. This demo uses fictional data to show the kind of experience you can create.',
-      browserLabel: 'dixie.cards/alex',
+        'This demo uses the same structures as the product: MainCard, projects, UserCards, skills, languages and contact.',
+      browserLabel: 'dixie.cards/sofia.rios',
       profileRole: 'Creative developer',
       profileBio:
         'I design and build digital experiences where technology feels human.',

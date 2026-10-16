@@ -176,10 +176,7 @@ function PublicPortfolioPage() {
 
       {portfolioCards.length > 0 && (
         <div id="dcards" className="app-section-anchor">
-          <UserCardsSection
-            cards={portfolioCards}
-            showCardNumber={portfolio.showCardNumber}
-          />
+          <UserCardsSection cards={portfolioCards} />
         </div>
       )}
 

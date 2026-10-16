@@ -78,7 +78,7 @@ export const defaultUserConfigPayload: UserConfigPayload = {
   showLanguagesSection: true,
   showContactSection: true,
   showCardsSection: true,
-  showCardNumber: true,
+  showCardNumber: false,
   showCv: true,
   showEmail: true,
   showAltEmail: true,

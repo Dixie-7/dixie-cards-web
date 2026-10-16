@@ -535,47 +535,23 @@ async function deleteUserCardWithApi(
   });
 }
 
-function findChangedBlock(
-  card: UserCardDto,
-  payload: UserCardBlockPayload,
-  fallbackId: number,
-) {
-  return (
-    card.blocks.find(
-      (block) =>
-        block.sortOrder === payload.sortOrder &&
-        block.type === payload.type &&
-        (block.title ?? '') === (payload.title ?? ''),
-    ) ??
-    card.blocks.find((block) => block.id === fallbackId) ??
-    card.blocks[card.blocks.length - 1]
-  );
-}
-
 async function createUserCardBlockWithApi(
   userCardId: number,
   payload: UserCardBlockPayload,
   token?: string | null,
-): Promise<BlockMutationResult> {
+): Promise<void> {
   const currentCard = await getUserCardWithApi(userCardId, token);
-  const updatedCard =
-    (await putUserCardWithApi(
-      userCardId,
-      createPersistedCardRequest(currentCard, getCardPayload(currentCard), [
-        ...currentCard.blocks.map((block) =>
-          getBlockRequest(block, currentCard.id),
-        ),
-        getBlockPayloadRequest(userCardId, payload),
-      ]),
-      token,
-    )) ?? (await getUserCardWithApi(userCardId, token));
-  const block = findChangedBlock(updatedCard, payload, 0);
 
-  if (!block) {
-    throw new Error('El servidor no devolvio el block creado.');
-  }
-
-  return { block, card: updatedCard };
+  await putUserCardWithApi(
+    userCardId,
+    createPersistedCardRequest(currentCard, getCardPayload(currentCard), [
+      ...currentCard.blocks.map((block) =>
+        getBlockRequest(block, currentCard.id),
+      ),
+      getBlockPayloadRequest(userCardId, payload),
+    ]),
+    token,
+  );
 }
 
 async function updateUserCardBlockWithApi(
@@ -583,32 +559,22 @@ async function updateUserCardBlockWithApi(
   userCardBlockId: number,
   payload: UserCardBlockPayload,
   token?: string | null,
-): Promise<BlockMutationResult> {
+): Promise<void> {
   const currentCard = await getUserCardWithApi(userCardId, token);
   const updatedBlocks = currentCard.blocks.map((block) =>
     block.id === userCardBlockId
       ? getBlockPayloadRequest(userCardId, payload, userCardBlockId)
       : getBlockRequest(block, currentCard.id),
   );
-  const updatedCard =
-    (await putUserCardWithApi(
-      userCardId,
-      createPersistedCardRequest(
-        currentCard,
-        getCardPayload(currentCard),
-        updatedBlocks,
-      ),
-      token,
-    )) ?? (await getUserCardWithApi(userCardId, token));
-  const block = updatedCard.blocks.find(
-    (candidate) => candidate.id === userCardBlockId,
+  await putUserCardWithApi(
+    userCardId,
+    createPersistedCardRequest(
+      currentCard,
+      getCardPayload(currentCard),
+      updatedBlocks,
+    ),
+    token,
   );
-
-  if (!block) {
-    throw new Error('El servidor no devolvio el block actualizado.');
-  }
-
-  return { block, card: updatedCard };
 }
 
 async function deleteUserCardBlockWithApi(
@@ -667,25 +633,36 @@ export const cardApi = {
       : deleteUserCardWithApi(userCardId, token);
   },
 
-  createUserCardBlock(
+  async createUserCardBlock(
     userCardId: number,
     payload: UserCardBlockPayload,
     token?: string | null,
-  ) {
-    return isMockUserCardsEnabled
-      ? createUserCardBlockWithMock(userCardId, payload)
-      : createUserCardBlockWithApi(userCardId, payload, token);
+  ): Promise<void> {
+    if (isMockUserCardsEnabled) {
+      await createUserCardBlockWithMock(userCardId, payload);
+      return;
+    }
+
+    await createUserCardBlockWithApi(userCardId, payload, token);
   },
 
-  updateUserCardBlock(
+  async updateUserCardBlock(
     userCardId: number,
     userCardBlockId: number,
     payload: UserCardBlockPayload,
     token?: string | null,
-  ) {
-    return isMockUserCardsEnabled
-      ? updateUserCardBlockWithMock(userCardId, userCardBlockId, payload)
-      : updateUserCardBlockWithApi(userCardId, userCardBlockId, payload, token);
+  ): Promise<void> {
+    if (isMockUserCardsEnabled) {
+      await updateUserCardBlockWithMock(userCardId, userCardBlockId, payload);
+      return;
+    }
+
+    await updateUserCardBlockWithApi(
+      userCardId,
+      userCardBlockId,
+      payload,
+      token,
+    );
   },
 
   deleteUserCardBlock(
