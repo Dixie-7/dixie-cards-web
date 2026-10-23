@@ -1,4 +1,6 @@
-export type LandingLanguage = 'es' | 'en';
+import type { AppLanguage } from '@/shared/i18n/i18n.types';
+
+export type LandingLanguage = AppLanguage;
 
 export type AuthEntryMode = 'login' | 'register';
 

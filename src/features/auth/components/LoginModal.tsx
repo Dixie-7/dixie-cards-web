@@ -13,6 +13,8 @@ import {
 } from '@/features/auth/services/authValidation';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import BaseModal from '@/shared/components/Modal/BaseModal';
+import type { AppLanguage } from '@/shared/i18n/i18n.types';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -33,20 +35,24 @@ interface AuthFormErrors {
 
 type AuthMode = 'login' | 'register';
 
-function validateLoginForm(credentials: LoginRequestDto): AuthFormErrors {
-  return validateLoginRequest(credentials);
+function validateLoginForm(
+  credentials: LoginRequestDto,
+  language: AppLanguage,
+): AuthFormErrors {
+  return validateLoginRequest(credentials, language);
 }
 
 function validateRegisterForm(
   credentials: RegisterRequestDto,
   confirmPassword: string,
+  language: AppLanguage,
 ): AuthFormErrors {
-  const errors: AuthFormErrors = validateRegisterRequest(credentials);
+  const errors: AuthFormErrors = validateRegisterRequest(credentials, language);
 
   if (!confirmPassword) {
-    errors.confirmPassword = 'Confirma tu contrasena.';
+    errors.confirmPassword = language === 'en' ? 'Confirm your password.' : 'Confirma tu contrasena.';
   } else if (credentials.password !== confirmPassword) {
-    errors.confirmPassword = 'Las contrasenas no coinciden.';
+    errors.confirmPassword = language === 'en' ? 'Passwords do not match.' : 'Las contrasenas no coinciden.';
   }
 
   return errors;
@@ -59,6 +65,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   initialMode = 'login',
   restoreFocusRef,
 }) => {
+  const { language, t } = useLanguage();
   const { isLoading, login, register } = useAuth();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -78,9 +85,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
         ? getPasswordSecurityErrors(registerPassword, {
             username: registerUsername,
             email: registerEmail,
-          })
+          }, language)
         : [],
-    [registerEmail, registerPassword, registerUsername],
+    [language, registerEmail, registerPassword, registerUsername],
   );
 
   const clearFeedback = () => {
@@ -112,7 +119,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       usernameOrEmail: usernameOrEmail.trim(),
       password: loginPassword,
     };
-    const validationErrors = validateLoginForm(credentials);
+    const validationErrors = validateLoginForm(credentials, language);
 
     if (hasValidationErrors(validationErrors)) {
       setErrors(validationErrors);
@@ -133,7 +140,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         form:
           unknownError instanceof Error
             ? unknownError.message
-            : 'No se pudo iniciar sesion.',
+            : t('authLoginError'),
       });
     }
   };
@@ -147,6 +154,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     const validationErrors = validateRegisterForm(
       credentials,
       confirmPassword,
+      language,
     );
 
     if (hasValidationErrors(validationErrors)) {
@@ -167,7 +175,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       setMode('login');
       setSuccessMessage(
         message ??
-          'Registro exitoso. Revisa tu correo para verificar y activar tu cuenta.',
+          t('authRegisterSuccess'),
       );
     } catch (unknownError) {
       setRegisterPassword('');
@@ -176,7 +184,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         form:
           unknownError instanceof Error
             ? unknownError.message
-            : 'No se pudo completar el registro.',
+            : t('authRegisterError'),
       });
     }
   };
@@ -201,11 +209,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setSuccessMessage(null);
   };
 
-  const modalTitle = mode === 'login' ? 'Login' : 'Crear cuenta';
+  const modalTitle = mode === 'login' ? t('authLogin') : t('authCreateAccount');
   const modalDescription =
     mode === 'login'
-      ? 'Ingresa tus credenciales para continuar.'
-      : 'Crea tu usuario y verifica el correo antes de iniciar sesion.';
+      ? t('authLoginDescription')
+      : t('authRegisterDescription');
 
   return (
     <BaseModal
@@ -233,7 +241,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
             }`}
             onClick={() => handleModeChange('login')}
           >
-            Login
+            {t('authLogin')}
           </button>
           <button
             type="button"
@@ -244,7 +252,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
             }`}
             onClick={() => handleModeChange('register')}
           >
-            Registro
+            {t('authRegister')}
           </button>
         </div>
 
@@ -255,7 +263,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="login-username"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Username o email
+                {t('authUsernameOrEmail')}
               </label>
 
               <input
@@ -297,7 +305,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="login-password"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Contrasena
+                {t('authPassword')}
               </label>
 
               <input
@@ -340,7 +348,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="register-username"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Username
+                {t('authUsername')}
               </label>
 
               <input
@@ -352,7 +360,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   setRegisterUsername(e.target.value);
                   clearError('username');
                 }}
-                placeholder="tu.usuario"
+                placeholder={language === 'es' ? 'tu.usuario' : 'your.username'}
                 autoComplete="username"
                 maxLength={50}
                 required
@@ -382,7 +390,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="register-email"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Email
+                {t('authEmail')}
               </label>
 
               <input
@@ -393,7 +401,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   setRegisterEmail(e.target.value);
                   clearError('email');
                 }}
-                placeholder="tu@email.com"
+                placeholder={language === 'es' ? 'tu@email.com' : 'your@email.com'}
                 autoComplete="email"
                 maxLength={100}
                 required
@@ -423,7 +431,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="register-password"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Contrasena
+                {t('authPassword')}
               </label>
 
               <input
@@ -468,8 +476,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   }`}
                 >
                   {registerPassword && passwordSecurityErrors.length === 0
-                    ? 'Contrasena segura.'
-                    : 'Minimo 8 caracteres con mayuscula, minuscula, numero y caracter especial.'}
+                    ? t('authSecurePassword')
+                    : t('authPasswordHint')}
                 </p>
               )}
             </div>
@@ -479,7 +487,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 htmlFor="register-confirm-password"
                 className="mb-2 block text-sm font-medium text-violet-100"
               >
-                Confirmar contrasena
+                {t('authConfirmPassword')}
               </label>
 
               <input
@@ -542,7 +550,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         {isMockAuthEnabled && mode === 'login' && (
           <div className="rounded-lg border border-cyan-400/20 bg-cyan-950/20 px-3 py-2 text-xs leading-relaxed text-zinc-300">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-cyan-100">Usuario de prueba</p>
+              <p className="font-semibold text-cyan-100">{t('authTestUser')}</p>
               <button
                 type="button"
                 className="rounded-md border border-cyan-400/30 px-2 py-1 font-semibold text-cyan-100 transition hover:bg-cyan-400/10"
@@ -552,7 +560,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   clearFeedback();
                 }}
               >
-                Usar
+                {t('authUse')}
               </button>
             </div>
             <p>
@@ -562,7 +570,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </code>
             </p>
             <p>
-              Password:{' '}
+              {t('authPassword')}:{' '}
               <code className="rounded bg-zinc-950/70 px-1.5 py-0.5 text-cyan-100">
                 {mockLoginCredentials.password}
               </code>
@@ -573,7 +581,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         {isMockAuthEnabled && mode === 'register' && (
           <div className="rounded-lg border border-cyan-400/20 bg-cyan-950/20 px-3 py-2 text-xs leading-relaxed text-zinc-300">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-cyan-100">Registro de prueba</p>
+              <p className="font-semibold text-cyan-100">{t('authTestRegistration')}</p>
               <button
                 type="button"
                 className="rounded-md border border-cyan-400/30 px-2 py-1 font-semibold text-cyan-100 transition hover:bg-cyan-400/10"
@@ -585,7 +593,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   clearFeedback();
                 }}
               >
-                Usar
+                {t('authUse')}
               </button>
             </div>
             <p>
@@ -595,7 +603,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </code>
             </p>
             <p>
-              Password:{' '}
+              {t('authPassword')}:{' '}
               <code className="rounded bg-zinc-950/70 px-1.5 py-0.5 text-cyan-100">
                 {mockRegisterSuggestion.password}
               </code>
@@ -611,11 +619,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
           >
             {isLoading
               ? mode === 'login'
-                ? 'Ingresando...'
-                : 'Creando...'
+                ? t('authLoginPending')
+                : t('authRegisterPending')
               : mode === 'login'
-                ? 'Login'
-                : 'Crear cuenta'}
+                ? t('authLogin')
+                : t('authCreateAccount')}
           </button>
 
           {mode === 'login' ? (
@@ -624,12 +632,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
               className="text-center text-sm text-violet-300 transition hover:text-violet-200 sm:text-left"
               onClick={() => {
                 setErrors({
-                  form: 'La recuperacion de contrasena se conectara cuando exista el endpoint correspondiente.',
+                  form: t('authForgotUnavailable'),
                 });
                 setSuccessMessage(null);
               }}
             >
-              Forgot Password?
+              {t('authForgotPassword')}
             </button>
           ) : (
             <button
@@ -637,7 +645,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
               className="text-center text-sm text-violet-300 transition hover:text-violet-200 sm:text-left"
               onClick={() => handleModeChange('login')}
             >
-              Ya tengo cuenta
+              {t('authHaveAccount')}
             </button>
           )}
         </div>

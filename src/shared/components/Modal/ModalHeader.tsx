@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface ModalHeaderProps {
   title: string;
@@ -17,6 +18,8 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   showCloseButton = true,
   onClose,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div
       data-slot="modal-header"
@@ -45,7 +48,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
           type="button"
           onClick={onClose}
           className="shrink-0 rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-violet-200"
-          aria-label="Close modal"
+          aria-label={`${t('actionClose')} modal`}
         >
           &times;
         </button>

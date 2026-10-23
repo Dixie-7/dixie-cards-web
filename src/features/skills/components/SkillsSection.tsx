@@ -2,6 +2,8 @@ import { AcademicCapIcon } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import type { SkillDto } from '@/features/skills/types/skill.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import { getSkillAccentColor, getSkillIconSource } from './skillUi';
 
 interface SkillsSectionProps {
@@ -15,6 +17,7 @@ export default function SkillsSection({
   isLoading = false,
   error = null,
 }: SkillsSectionProps) {
+  const { t } = useLanguage();
   const sortedSkills = useMemo(
     () =>
       [...skills].sort(
@@ -38,17 +41,15 @@ export default function SkillsSection({
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 text-left">
           <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-            Skills
+            {t('skillsTitle')}
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            Herramientas y fortalezas
+            {t('skillsSubtitle')}
           </h2>
         </div>
 
         {isLoading && (
-          <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando skills...
-          </p>
+          <LoadingState label={t('loadingContent')} />
         )}
 
         {!isLoading && error && (
@@ -59,7 +60,7 @@ export default function SkillsSection({
 
         {!isLoading && !error && sortedSkills.length === 0 && (
           <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Este portfolio todavia no tiene skills publicadas.
+            {t('skillsEmpty')}
           </div>
         )}
 

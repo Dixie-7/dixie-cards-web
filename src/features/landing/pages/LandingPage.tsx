@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoginModal from '@/features/auth/components/LoginModal';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import { CustomizationSection } from '../components/CustomizationSection';
 import { FinalCtaSection } from '../components/FinalCtaSection';
 import { HeroSection } from '../components/HeroSection';
@@ -14,7 +15,7 @@ import { PortfolioPreviewSection } from '../components/PortfolioPreviewSection';
 import { PossibilitiesSection } from '../components/PossibilitiesSection';
 import { landingContent } from '../landingContent';
 import { landingParticlesConfig } from '../landingParticlesConfig';
-import type { AuthEntryMode, LandingLanguage } from '../landing.types';
+import type { AuthEntryMode } from '../landing.types';
 import '../styles/landing.css';
 
 interface LandingNavigationState {
@@ -26,6 +27,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const navigationState = location.state as LandingNavigationState | null;
   const redirectedAuthMode =
     navigationState?.authMode === 'login' ||
@@ -36,7 +38,6 @@ function LandingPage() {
     navigationState?.returnTo === '/portfolio'
       ? navigationState.returnTo
       : null;
-  const [language, setLanguage] = useState<LandingLanguage>('es');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(
     Boolean(redirectedAuthMode),
   );
@@ -45,10 +46,6 @@ function LandingPage() {
   );
   const [authModalKey, setAuthModalKey] = useState(0);
   const content = landingContent[language];
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
 
   const openAuth = (mode: AuthEntryMode) => {
     if (isAuthenticated) {

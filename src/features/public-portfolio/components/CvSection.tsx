@@ -1,11 +1,14 @@
 import { ArrowDownTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import type { UserFileDto } from '@/features/files/types/userFile.types';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface CvSectionProps {
   cv: UserFileDto;
 }
 
 export default function CvSection({ cv }: CvSectionProps) {
+  const { t } = useLanguage();
+
   return (
     <section id="cv" className="app-section-anchor w-full px-4 py-12">
       <div className="mx-auto max-w-5xl">
@@ -14,7 +17,7 @@ export default function CvSection({ cv }: CvSectionProps) {
             CV
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            Curriculum disponible
+            {t('cvAvailable')}
           </h2>
         </div>
 

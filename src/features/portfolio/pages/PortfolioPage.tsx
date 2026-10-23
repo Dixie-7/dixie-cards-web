@@ -28,10 +28,10 @@ import StatusToast, {
   type StatusToastMessage,
 } from '@/shared/components/StatusToast';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
-
-const homeNavigationItem: FloatingNavbarItem = { label: 'Home', href: '/' };
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 function PortfolioPage() {
+  const { t } = useLanguage();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -104,21 +104,21 @@ function PortfolioPage() {
   const userLabel = user?.username ?? user?.email;
   const ownerLabel = user?.username ? `@${user.username}` : userLabel;
   const navigationItems: FloatingNavbarItem[] = [
-    homeNavigationItem,
+    { label: t('navHome'), href: '/' },
     ...(isEditMode || userConfig.showProjectsSection
-      ? [{ label: 'Projects', href: '#projects' }]
+      ? [{ label: t('navProjects'), href: '#projects' }]
       : []),
     ...(isEditMode || userConfig.showCardsSection
-      ? [{ label: 'DCards', href: '#dcards' }]
+      ? [{ label: t('navCards'), href: '#dcards' }]
       : []),
     ...(isEditMode || userConfig.showSkillsSection
-      ? [{ label: 'Skills', href: '#skills' }]
+      ? [{ label: t('navSkills'), href: '#skills' }]
       : []),
     ...(isEditMode || userConfig.showLanguagesSection
-      ? [{ label: 'Language', href: '#language' }]
+      ? [{ label: t('navLanguages'), href: '#language' }]
       : []),
     ...(isEditMode || userConfig.showContactSection
-      ? [{ label: 'Contact', href: '#contact' }]
+      ? [{ label: t('navContact'), href: '#contact' }]
       : []),
   ];
 
@@ -175,6 +175,8 @@ function PortfolioPage() {
             key={isEditMode ? 'cards-edit' : 'cards-view'}
             cards={cards}
             displayCards={portfolioCards}
+            // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+            // showCardNumber={userConfig.showCardNumber}
             isEditMode={isEditMode}
             isLoading={isLoading}
             error={error}

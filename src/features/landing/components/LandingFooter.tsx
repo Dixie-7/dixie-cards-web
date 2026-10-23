@@ -35,7 +35,7 @@ export function LandingFooter({
       </div>
       <div className="landing-container landing-footer__bottom">
         <span>© {new Date().getFullYear()} {content.copyright}</span>
-        <span>BUENOS AIRES / DIGITAL EVERYWHERE</span>
+        <span>Dixie 7 - Argentina</span>
       </div>
     </footer>
   );

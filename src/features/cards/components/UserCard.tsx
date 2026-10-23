@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import type { UserCardDto } from '@/features/cards/types/userCard.types';
 import type { UserCardBlockDto } from '@/features/cards/types/userCard.types';
+// TODO(showCardNumber): Uncomment with the numbered card label.
+// import { useLanguage } from '@/shared/i18n/useLanguage';
 import {
   getCustomColorStylesFromStyleText,
   normalizeStyleText,
@@ -13,7 +15,7 @@ interface UserCardProps {
   className?: string;
   actions?: ReactNode;
   renderBlockActions?: (block: UserCardBlockDto) => ReactNode;
-  showCardNumber?: boolean;
+  // showCardNumber?: boolean;
   showBlockMetadata?: boolean;
 }
 
@@ -49,9 +51,11 @@ export default function UserCard({
   className = '',
   actions,
   renderBlockActions,
-  showCardNumber = false,
+  // showCardNumber = false,
   showBlockMetadata = false,
 }: UserCardProps) {
+  // TODO(showCardNumber): Uncomment with the numbered card label.
+  // const { language } = useLanguage();
   const sortedBlocks = [...card.blocks].sort(
     (currentBlock, nextBlock) => currentBlock.sortOrder - nextBlock.sortOrder,
   );
@@ -78,11 +82,11 @@ export default function UserCard({
         </div>
       )}
       <header className="mb-7" data-card-header>
-        {showCardNumber && (
+        {/* {showCardNumber && (
           <p className={templateStyles.eyebrow}>
-            Card #{card.sortOrder}
+            {language === 'es' ? 'Tarjeta' : 'Card'} #{card.sortOrder}
           </p>
-        )}
+        )} */}
         <h2
           className={templateStyles.title}
           data-card-title

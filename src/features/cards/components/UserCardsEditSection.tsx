@@ -11,6 +11,7 @@ import {
 } from '@/features/cards/services/styleText';
 import MainCard from './MainCard';
 import UserCard from './UserCard';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface UserCardsEditSectionProps {
   cards: UserCardDto[];
@@ -50,6 +51,7 @@ export default function UserCardsEditSection({
   onDeleteBlock,
   activeCardId = null,
 }: UserCardsEditSectionProps) {
+  const { t } = useLanguage();
   const sortedCards = [...cards].sort(
     (currentCard, nextCard) => currentCard.sortOrder - nextCard.sortOrder,
   );
@@ -58,7 +60,7 @@ export default function UserCardsEditSection({
     return (
       <section className="w-full px-4 pb-12">
         <div className="mx-auto max-w-5xl rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          No UserCards yet.
+          {t('cardsEmpty')}
         </div>
       </section>
     );
@@ -69,10 +71,10 @@ export default function UserCardsEditSection({
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 text-left">
           <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-            Edit mode
+            {t('cardsEditMode')}
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            Editable UserCards
+            {t('cardsEditable')}
           </h1>
         </div>
 
@@ -89,8 +91,8 @@ export default function UserCardsEditSection({
                   type="button"
                   onClick={() => onEditCard(card)}
                   className={iconButtonClass}
-                  aria-label={`Edit ${card.title}`}
-                  title="Edit"
+                  aria-label={`${t('actionEdit')} ${card.title}`}
+                  title={t('actionEdit')}
                 >
                   <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -98,8 +100,8 @@ export default function UserCardsEditSection({
                   type="button"
                   onClick={() => onAddBlock(card)}
                   className={iconButtonClass}
-                  aria-label={`Add block to ${card.title}`}
-                  title="Add block"
+                  aria-label={t('blockAddTo', { name: card.title })}
+                  title={t('blockCreate')}
                 >
                   <PlusIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -107,8 +109,8 @@ export default function UserCardsEditSection({
                   type="button"
                   onClick={() => onDeleteCard(card)}
                   className={dangerIconButtonClass}
-                  aria-label={`Delete ${card.title}`}
-                  title="Delete"
+                  aria-label={`${t('actionDelete')} ${card.title}`}
+                  title={t('actionDelete')}
                 >
                   <TrashIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -120,8 +122,8 @@ export default function UserCardsEditSection({
                   type="button"
                   onClick={() => onEditBlock(card, block)}
                   className={iconButtonClass}
-                  aria-label={`Edit ${block.title ?? block.type}`}
-                  title="Edit"
+                  aria-label={`${t('actionEdit')} ${block.title ?? block.type}`}
+                  title={t('actionEdit')}
                 >
                   <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -129,8 +131,8 @@ export default function UserCardsEditSection({
                   type="button"
                   onClick={() => onDeleteBlock(card, block)}
                   className={dangerIconButtonClass}
-                  aria-label={`Delete ${block.title ?? block.type}`}
-                  title="Delete"
+                  aria-label={`${t('actionDelete')} ${block.title ?? block.type}`}
+                  title={t('actionDelete')}
                 >
                   <TrashIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -165,7 +167,8 @@ export default function UserCardsEditSection({
                       card={card}
                       actions={cardActions}
                       renderBlockActions={renderBlockActions}
-                      showCardNumber
+                      // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+                      // showCardNumber
                       showBlockMetadata
                     />
                   )}

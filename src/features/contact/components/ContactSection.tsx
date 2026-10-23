@@ -19,6 +19,8 @@ import {
   type UserConfigPayload,
 } from '@/features/user-config/types/userConfig.types';
 import type { UserContactDto } from '@/features/contact/types/contact.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface ContactSectionProps {
   contact: UserContactDto | null;
@@ -47,6 +49,14 @@ interface ContactLink {
   value: string;
   href: string;
   icon: ContactIcon;
+}
+
+interface ContactLabels {
+  publicEmail: string;
+  alternateEmail: string;
+  phone: string;
+  alternatePhone: string;
+  website: string;
 }
 
 interface MailDraft {
@@ -119,13 +129,18 @@ function getPrimaryEmail(
   return null;
 }
 
-function createMailtoHref(targetEmail: string, draft: MailDraft) {
-  const subject = draft.subject.trim() || 'Contacto desde portfolio';
+function createMailtoHref(
+  targetEmail: string,
+  draft: MailDraft,
+  defaultSubject: string,
+  fromLabel: (email: string) => string,
+) {
+  const subject = draft.subject.trim() || defaultSubject;
   const bodyParts = [draft.message.trim()];
   const senderEmail = draft.senderEmail.trim();
 
   if (senderEmail) {
-    bodyParts.push(`\n\nDe: ${senderEmail}`);
+    bodyParts.push(`\n\n${fromLabel(senderEmail)}`);
   }
 
   const params = new URLSearchParams({
@@ -139,6 +154,7 @@ function createMailtoHref(targetEmail: string, draft: MailDraft) {
 function createContactLinks(
   contact: UserContactDto | null,
   visibility: ContactVisibilityConfig,
+  labels: ContactLabels,
 ): ContactLink[] {
   if (!contact) {
     return [];
@@ -149,7 +165,7 @@ function createContactLinks(
   if (visibility.showEmail && hasText(contact.publicEmail)) {
     links.push({
       id: 'publicEmail',
-      label: 'Email publico',
+      label: labels.publicEmail,
       value: contact.publicEmail,
       href: `mailto:${contact.publicEmail}`,
       icon: EnvelopeIcon,
@@ -159,7 +175,7 @@ function createContactLinks(
   if (visibility.showAltEmail && hasText(contact.altEmail)) {
     links.push({
       id: 'altEmail',
-      label: 'Email alternativo',
+      label: labels.alternateEmail,
       value: contact.altEmail,
       href: `mailto:${contact.altEmail}`,
       icon: EnvelopeIcon,
@@ -169,7 +185,7 @@ function createContactLinks(
   if (visibility.showPhone && hasText(contact.phone)) {
     links.push({
       id: 'phone',
-      label: 'Telefono',
+      label: labels.phone,
       value: contact.phone,
       href: getPhoneHref(contact.phone),
       icon: PhoneIcon,
@@ -179,7 +195,7 @@ function createContactLinks(
   if (visibility.showAltPhone && hasText(contact.altPhone)) {
     links.push({
       id: 'altPhone',
-      label: 'Telefono alternativo',
+      label: labels.alternatePhone,
       value: contact.altPhone,
       href: getPhoneHref(contact.altPhone),
       icon: PhoneIcon,
@@ -189,7 +205,7 @@ function createContactLinks(
   if (visibility.showWebsite && hasText(contact.site)) {
     links.push({
       id: 'site',
-      label: 'Sitio',
+      label: labels.website,
       value: contact.site,
       href: normalizeExternalUrl(contact.site),
       icon: GlobeAltIcon,
@@ -271,9 +287,20 @@ export default function ContactSection({
   error = null,
   visibility = defaultUserConfigPayload,
 }: ContactSectionProps) {
+  const { t } = useLanguage();
+  const contactLabels = useMemo<ContactLabels>(
+    () => ({
+      publicEmail: t('contactPublicEmail'),
+      alternateEmail: t('contactAlternateEmail'),
+      phone: t('contactPhone'),
+      alternatePhone: t('contactAlternatePhone'),
+      website: t('contactWebsite'),
+    }),
+    [t],
+  );
   const contactLinks = useMemo(
-    () => createContactLinks(contact, visibility),
-    [contact, visibility],
+    () => createContactLinks(contact, visibility, contactLabels),
+    [contact, contactLabels, visibility],
   );
   const targetEmail = getPrimaryEmail(contact, visibility);
   const [mailDraft, setMailDraft] = useState<MailDraft>({
@@ -287,12 +314,19 @@ export default function ContactSection({
     event.preventDefault();
 
     if (!targetEmail) {
-      setMailStatus('Este portfolio no tiene un email publico disponible.');
+      setMailStatus(t('contactUnavailable'));
       return;
     }
 
-    window.location.href = createMailtoHref(targetEmail, mailDraft);
-    setMailStatus('Abriendo tu cliente de correo...');
+    window.location.assign(
+      createMailtoHref(
+        targetEmail,
+        mailDraft,
+        t('contactDefaultSubject'),
+        (email) => t('contactFrom', { email }),
+      ),
+    );
+    setMailStatus(t('contactOpeningEmail'));
   };
 
   return (
@@ -306,17 +340,15 @@ export default function ContactSection({
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 text-left">
           <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-            Contacto
+            {t('contactTitle')}
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            Hablemos
+            {t('contactSubtitle')}
           </h2>
         </div>
 
         {isLoading && (
-          <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando datos de contacto...
-          </p>
+          <LoadingState label={t('loadingContent')} />
         )}
 
         {!isLoading && error && (
@@ -327,7 +359,7 @@ export default function ContactSection({
 
         {!isLoading && !error && contactLinks.length === 0 && (
           <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Este portfolio todavia no tiene datos de contacto publicados.
+            {t('contactEmpty')}
           </div>
         )}
 
@@ -349,17 +381,19 @@ export default function ContactSection({
                 </span>
                 <div>
                   <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
-                    Enviar mail
+                    {t('contactSendEmail')}
                   </h3>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Para: {targetEmail ?? 'sin email publico'}
+                    {t('contactTo', {
+                      email: targetEmail ?? t('contactNoPublicEmail'),
+                    })}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <label className="block">
-                  <span className={labelClass}>Tu email</span>
+                  <span className={labelClass}>{t('contactYourEmail')}</span>
                   <input
                     type="email"
                     value={mailDraft.senderEmail}
@@ -375,7 +409,7 @@ export default function ContactSection({
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Asunto</span>
+                  <span className={labelClass}>{t('contactSubject')}</span>
                   <input
                     value={mailDraft.subject}
                     onChange={(event) =>
@@ -385,12 +419,12 @@ export default function ContactSection({
                       }))
                     }
                     className={fieldClass}
-                    placeholder="Consulta desde tu portfolio"
+                    placeholder={t('contactSubjectPlaceholder')}
                   />
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Mensaje</span>
+                  <span className={labelClass}>{t('contactMessage')}</span>
                   <textarea
                     value={mailDraft.message}
                     onChange={(event) =>
@@ -401,7 +435,7 @@ export default function ContactSection({
                     }
                     rows={5}
                     className={fieldClass}
-                    placeholder="Escribi tu mensaje..."
+                    placeholder={t('contactMessagePlaceholder')}
                     required
                   />
                 </label>
@@ -419,7 +453,7 @@ export default function ContactSection({
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-zinc-500"
               >
                 <PaperAirplaneIcon className="h-4 w-4" aria-hidden="true" />
-                Enviar mail
+                {t('contactSendEmail')}
               </button>
             </form>
           </div>

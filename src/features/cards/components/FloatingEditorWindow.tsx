@@ -6,6 +6,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import { createPortal } from 'react-dom';
 
 interface FloatingEditorWindowProps {
@@ -122,6 +123,7 @@ export default function FloatingEditorWindow({
   avoidSelector = null,
   onClose,
 }: FloatingEditorWindowProps) {
+  const { t } = useLanguage();
   const panelRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -230,8 +232,8 @@ export default function FloatingEditorWindow({
           onPointerDown={(event) => event.stopPropagation()}
           onClick={onClose}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-          aria-label="Close editor"
-          title="Close"
+          aria-label={t('editorClose')}
+          title={t('actionClose')}
         >
           <XMarkIcon className="h-4 w-4" aria-hidden="true" />
         </button>

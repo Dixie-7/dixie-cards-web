@@ -11,6 +11,8 @@ import type {
   UserLanguageDto,
   UserLanguagePayload,
 } from '@/features/languages/types/language.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import { getLanguageAccentColor, getSafePercent } from './languageUi';
 
 interface LanguagesEditorPanelProps {
@@ -58,10 +60,12 @@ function getSafeSortOrder(sortOrder: number) {
 
 function createEmptyLanguageDraft(
   languages: UserLanguageDto[],
+  defaultName = 'New language',
+  defaultLevel = 'Basic',
 ): LanguageDraft {
   return {
-    language: 'Nuevo lenguaje',
-    level: 'Basico',
+    language: defaultName,
+    level: defaultLevel,
     skillPercent: 50,
     sortOrder: getNextSortOrder(languages),
   };
@@ -94,6 +98,7 @@ function LanguageAdminCard({
   onEdit: (language: UserLanguageDto) => void;
   onDelete: (language: UserLanguageDto) => void;
 }) {
+  const { t } = useLanguage();
   const safePercent = getSafePercent(language.skillPercent);
   const accentColor = getLanguageAccentColor(safePercent);
 
@@ -117,7 +122,7 @@ function LanguageAdminCard({
                 {language.language}
               </h3>
               <span className="rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                Orden {language.sortOrder}
+                {t('itemOrder', { number: language.sortOrder })}
               </span>
               <span
                 className="rounded-full border px-2.5 py-1 text-xs font-semibold"
@@ -147,8 +152,8 @@ function LanguageAdminCard({
             type="button"
             onClick={() => onEdit(language)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:border-zinc-800 dark:text-zinc-200 dark:hover:text-cyan-200"
-            aria-label={`Editar ${language.language}`}
-            title="Editar"
+            aria-label={`${t('actionEdit')} ${language.language}`}
+            title={t('actionEdit')}
           >
             <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -156,8 +161,8 @@ function LanguageAdminCard({
             type="button"
             onClick={() => onDelete(language)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
-            aria-label={`Eliminar ${language.language}`}
-            title="Eliminar"
+            aria-label={`${t('actionDelete')} ${language.language}`}
+            title={t('actionDelete')}
           >
             <TrashIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -176,6 +181,9 @@ export default function LanguagesEditorPanel({
   onUpdateLanguage,
   onDeleteLanguage,
 }: LanguagesEditorPanelProps) {
+  const { language: interfaceLanguage, t } = useLanguage();
+  const newLanguageName = interfaceLanguage === 'es' ? 'Nuevo idioma' : 'New language';
+  const newLanguageLevel = interfaceLanguage === 'es' ? 'Basico' : 'Basic';
   const sortedLanguages = useMemo(
     () =>
       [...languages].sort(
@@ -186,7 +194,7 @@ export default function LanguagesEditorPanel({
   );
   const [editor, setEditor] = useState<LanguageEditor | null>(null);
   const [draft, setDraft] = useState<LanguageDraft>(() =>
-    createEmptyLanguageDraft([]),
+    createEmptyLanguageDraft([], newLanguageName, newLanguageLevel),
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
@@ -194,7 +202,7 @@ export default function LanguagesEditorPanel({
 
   const openCreateLanguage = () => {
     setEditor({ mode: 'create' });
-    setDraft(createEmptyLanguageDraft(sortedLanguages));
+    setDraft(createEmptyLanguageDraft(sortedLanguages, newLanguageName, newLanguageLevel));
     setStatusMessage('');
     setMutationError('');
   };
@@ -208,7 +216,7 @@ export default function LanguagesEditorPanel({
 
   const closeEditor = () => {
     setEditor(null);
-    setDraft(createEmptyLanguageDraft(sortedLanguages));
+    setDraft(createEmptyLanguageDraft(sortedLanguages, newLanguageName, newLanguageLevel));
     setMutationError('');
   };
 
@@ -229,13 +237,13 @@ export default function LanguagesEditorPanel({
           ? await onCreateLanguage(payload)
           : await onUpdateLanguage(editor.languageId, payload);
 
-      setStatusMessage(`Lenguaje "${savedLanguage.language}" guardado.`);
+      setStatusMessage(t('itemSaved', { name: savedLanguage.language }));
       closeEditor();
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el lenguaje.',
+          : t('languageSaveError'),
       );
     } finally {
       setIsSaving(false);
@@ -243,7 +251,7 @@ export default function LanguagesEditorPanel({
   };
 
   const handleDeleteLanguage = async (language: UserLanguageDto) => {
-    if (!window.confirm(`Eliminar "${language.language}"?`)) {
+    if (!window.confirm(t('itemDeleteConfirm', { name: language.language }))) {
       return;
     }
 
@@ -257,12 +265,12 @@ export default function LanguagesEditorPanel({
         closeEditor();
       }
 
-      setStatusMessage(`Lenguaje "${language.language}" eliminado.`);
+      setStatusMessage(t('itemDeleted', { name: language.language }));
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo eliminar el lenguaje.',
+          : t('languageDeleteError'),
       );
     } finally {
       setIsSaving(false);
@@ -275,13 +283,13 @@ export default function LanguagesEditorPanel({
         <div className="flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              Languages manager
+              {t('languagesManager')}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-              Lenguajes
+              {t('languagesTitle')}
             </h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              User #{currentUserId}
+              {t('contactUser')} #{currentUserId}
             </p>
           </div>
           <button
@@ -290,14 +298,16 @@ export default function LanguagesEditorPanel({
             className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100 md:self-end"
           >
             <PlusIcon className="h-4 w-4" aria-hidden="true" />
-            Crear lenguaje
+            {t('languageCreate')}
           </button>
         </div>
 
         {isLoading && (
-          <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando lenguajes...
-          </p>
+          <LoadingState
+            className="mt-4"
+            label={t('loadingContent')}
+            variant="compact"
+          />
         )}
 
         {error && (
@@ -327,19 +337,19 @@ export default function LanguagesEditorPanel({
               <div>
                 <p className="text-sm font-semibold text-zinc-950 dark:text-white">
                   {editor.mode === 'create'
-                    ? 'Crear lenguaje'
-                    : 'Editar lenguaje'}
+                    ? t('languageCreate')
+                    : t('languageEdit')}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  DTO UserLanguageDto / UpdateUserLanguageDto
+                  {t('languageEditorDescription')}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-                aria-label="Cerrar editor"
-                title="Cerrar"
+                aria-label={t('editorClose')}
+                title={t('actionClose')}
               >
                 <XMarkIcon className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -347,7 +357,7 @@ export default function LanguagesEditorPanel({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label>
-                <span className={labelClass}>Language</span>
+                <span className={labelClass}>{t('languagesTitle')}</span>
                 <input
                   value={draft.language}
                   maxLength={50}
@@ -363,7 +373,7 @@ export default function LanguagesEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>Level</span>
+                <span className={labelClass}>{t('editorLevel')}</span>
                 <input
                   value={draft.level}
                   maxLength={30}
@@ -379,7 +389,7 @@ export default function LanguagesEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>SkillPercent</span>
+                <span className={labelClass}>{t('editorPercentage')}</span>
                 <div className="grid gap-2">
                   <input
                     type="number"
@@ -411,7 +421,7 @@ export default function LanguagesEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>SortOrder</span>
+                <span className={labelClass}>{t('editorSortOrder')}</span>
                 <input
                   type="number"
                   min={0}
@@ -434,14 +444,14 @@ export default function LanguagesEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-600"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isSaving ? 'Guardando...' : 'Guardar'}
+                {isSaving ? t('actionSaving') : t('actionSave')}
               </button>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
               >
-                Cancelar
+                {t('actionCancel')}
               </button>
             </div>
           </form>
@@ -449,7 +459,7 @@ export default function LanguagesEditorPanel({
 
         {!isLoading && sortedLanguages.length === 0 && (
           <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            No hay lenguajes todavia.
+            {t('languageEmpty')}
           </div>
         )}
 

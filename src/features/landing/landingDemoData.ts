@@ -19,7 +19,7 @@ export const landingDemoMainCard: UserCardDto = {
       id: 1001,
       userCardId: 101,
       type: 'text',
-      title: 'Sofia Rios',
+      title: 'Sofía Rios',
       content:
         'Desarrolladora full stack. Convierto procesos complejos en productos web claros y faciles de usar.',
       icon: 'none',
@@ -44,7 +44,7 @@ export const landingDemoMainCard: UserCardDto = {
       type: 'media',
       title: 'Workspace',
       mediaUrl:
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
+        'https://images.pexels.com/photos/5473309/pexels-photo-5473309.jpeg',
       caption: 'Diseño, desarrollo y entrega de producto.',
       icon: 'photo',
       template: 'main-photo',
@@ -74,7 +74,7 @@ export const landingDemoCards: UserCardDto[] = [
         content:
           'Trabajo desde el flujo de usuario hasta los componentes y estados finales de la interfaz.',
         icon: 'paint',
-        template: 'featured',
+        template: 'Figma to React',
         width: 100,
         sortOrder: 1,
       },
@@ -85,7 +85,7 @@ export const landingDemoCards: UserCardDto[] = [
         title: 'En la practica',
         content: 'Design systems; Accesibilidad; Responsive; Motion',
         icon: 'sparkles',
-        template: 'compact',
+        template: 'UX / UI Specialist',
         width: 100,
         sortOrder: 2,
       },
@@ -94,7 +94,7 @@ export const landingDemoCards: UserCardDto[] = [
   {
     id: 103,
     userId: 0,
-    title: 'Como trabajo',
+    title: 'Cómo trabajo',
     description: 'Decisiones visibles, entregas cortas y mejora continua.',
     template: 'editorial',
     styleText: 'ring-1 ring-emerald-500/20',
@@ -108,9 +108,9 @@ export const landingDemoCards: UserCardDto[] = [
         title: 'Principio',
         content:
           'Una interfaz funciona mejor cuando la persona entiende que hacer sin tener que pensarlo dos veces.',
-        caption: 'Sofia Rios',
+        caption: 'Sofía Rios',
         icon: 'lightbulb',
-        template: 'highlight',
+        template: 'Ideas claras',
         width: 100,
         sortOrder: 1,
       },
@@ -121,7 +121,7 @@ export const landingDemoCards: UserCardDto[] = [
         title: 'Proceso',
         content: 'Descubrir; Prototipar; Construir; Medir',
         icon: 'rocket',
-        template: 'compact',
+        template: 'Transparencia total',
         width: 100,
         sortOrder: 2,
       },
@@ -132,9 +132,9 @@ export const landingDemoCards: UserCardDto[] = [
 export const landingDemoProject: ProjectDto = {
   id: 201,
   userId: 0,
-  name: 'TurnoSimple',
+  name: 'EasyFarm',
   description:
-    'Agenda digital para que equipos pequeños administren turnos, disponibilidad y recordatorios desde un solo lugar.',
+    'Una solución práctica para la gestión de medicamentos, horarios, servicios y personal ideado para la industria farmacéutica.',
   technologies: 'React; TypeScript; ASP.NET Core; PostgreSQL',
   releaseDate: '2026-08-18T00:00:00.000Z',
   status: 'published',
@@ -152,7 +152,7 @@ export const landingDemoProject: ProjectDto = {
     {
       id: 401,
       imageUrl:
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80',
+        'https://images.pexels.com/photos/8657287/pexels-photo-8657287.jpeg',
       altText: 'Dashboard de TurnoSimple',
       sortOrder: 1,
       isCover: true,

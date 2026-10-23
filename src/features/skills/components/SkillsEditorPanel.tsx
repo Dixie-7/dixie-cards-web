@@ -7,6 +7,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { SkillDto, SkillPayload } from '@/features/skills/types/skill.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import {
   getSkillAccentColor,
   getSkillIconSource,
@@ -55,9 +57,9 @@ function getSafeSortOrder(sortOrder: number) {
   return Math.max(0, Math.round(sortOrder));
 }
 
-function createEmptySkillDraft(skills: SkillDto[]): SkillDraft {
+function createEmptySkillDraft(skills: SkillDto[], defaultName = 'New skill'): SkillDraft {
   return {
-    skillName: 'Nueva skill',
+    skillName: defaultName,
     skillDescription: '',
     skillNote: '',
     skillIcon: '',
@@ -97,6 +99,7 @@ function SkillAdminCard({
   onEdit: (skill: SkillDto) => void;
   onDelete: (skill: SkillDto) => void;
 }) {
+  const { t } = useLanguage();
   const accentColor = getSkillAccentColor(skill.skillColor);
 
   return (
@@ -119,7 +122,7 @@ function SkillAdminCard({
                 {skill.skillName}
               </h3>
               <span className="rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                Orden {skill.sortOrder}
+                {t('itemOrder', { number: skill.sortOrder })}
               </span>
             </div>
             {skill.skillDescription && (
@@ -140,8 +143,8 @@ function SkillAdminCard({
             type="button"
             onClick={() => onEdit(skill)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:border-zinc-800 dark:text-zinc-200 dark:hover:text-cyan-200"
-            aria-label={`Editar ${skill.skillName}`}
-            title="Editar"
+            aria-label={`${t('actionEdit')} ${skill.skillName}`}
+            title={t('actionEdit')}
           >
             <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -149,8 +152,8 @@ function SkillAdminCard({
             type="button"
             onClick={() => onDelete(skill)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
-            aria-label={`Eliminar ${skill.skillName}`}
-            title="Eliminar"
+            aria-label={`${t('actionDelete')} ${skill.skillName}`}
+            title={t('actionDelete')}
           >
             <TrashIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -169,6 +172,7 @@ function SkillIconPicker({
   skillName: string;
   onChange: (value: string) => void;
 }) {
+  const { t } = useLanguage();
   const normalizedValue = value.trim();
   const hasKnownSelection = skillIconOptions.some(
     (option) => option.value === normalizedValue,
@@ -177,7 +181,7 @@ function SkillIconPicker({
     normalizedValue && !hasKnownSelection
       ? {
           value: normalizedValue,
-          label: 'Icono actual',
+          label: t('skillCurrentIcon'),
           description: normalizedValue,
           source: getSkillIconSource(normalizedValue, skillName),
         }
@@ -188,10 +192,10 @@ function SkillIconPicker({
 
   return (
     <div className="md:col-span-2">
-      <span className={labelClass}>SkillIcon</span>
+      <span className={labelClass}>{t('editorIcon')}</span>
       <div
         role="radiogroup"
-        aria-label="Seleccionar icono de skill"
+        aria-label={t('skillSelectIcon')}
         className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2 lg:grid-cols-3"
       >
         {pickerOptions.map((option) => {
@@ -246,6 +250,8 @@ export default function SkillsEditorPanel({
   onUpdateSkill,
   onDeleteSkill,
 }: SkillsEditorPanelProps) {
+  const { language, t } = useLanguage();
+  const defaultSkillName = language === 'es' ? 'Nueva habilidad' : 'New skill';
   const sortedSkills = useMemo(
     () =>
       [...skills].sort(
@@ -256,7 +262,7 @@ export default function SkillsEditorPanel({
   );
   const [editor, setEditor] = useState<SkillEditor | null>(null);
   const [draft, setDraft] = useState<SkillDraft>(() =>
-    createEmptySkillDraft([]),
+    createEmptySkillDraft([], defaultSkillName),
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
@@ -264,7 +270,7 @@ export default function SkillsEditorPanel({
 
   const openCreateSkill = () => {
     setEditor({ mode: 'create' });
-    setDraft(createEmptySkillDraft(sortedSkills));
+    setDraft(createEmptySkillDraft(sortedSkills, defaultSkillName));
     setStatusMessage('');
     setMutationError('');
   };
@@ -278,7 +284,7 @@ export default function SkillsEditorPanel({
 
   const closeEditor = () => {
     setEditor(null);
-    setDraft(createEmptySkillDraft(sortedSkills));
+    setDraft(createEmptySkillDraft(sortedSkills, defaultSkillName));
     setMutationError('');
   };
 
@@ -299,13 +305,13 @@ export default function SkillsEditorPanel({
           ? await onCreateSkill(payload)
           : await onUpdateSkill(editor.skillId, payload);
 
-      setStatusMessage(`Skill "${savedSkill.skillName}" guardada.`);
+      setStatusMessage(t('itemSaved', { name: savedSkill.skillName }));
       closeEditor();
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar la skill.',
+          : t('skillSaveError'),
       );
     } finally {
       setIsSaving(false);
@@ -313,7 +319,7 @@ export default function SkillsEditorPanel({
   };
 
   const handleDeleteSkill = async (skill: SkillDto) => {
-    if (!window.confirm(`Eliminar "${skill.skillName}"?`)) {
+    if (!window.confirm(t('itemDeleteConfirm', { name: skill.skillName }))) {
       return;
     }
 
@@ -327,12 +333,12 @@ export default function SkillsEditorPanel({
         closeEditor();
       }
 
-      setStatusMessage(`Skill "${skill.skillName}" eliminada.`);
+      setStatusMessage(t('itemDeleted', { name: skill.skillName }));
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo eliminar la skill.',
+          : t('skillDeleteError'),
       );
     } finally {
       setIsSaving(false);
@@ -345,13 +351,13 @@ export default function SkillsEditorPanel({
         <div className="flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              Skills manager
+              {t('skillsManager')}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-              Skills
+              {t('skillsTitle')}
             </h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              User #{currentUserId}
+              {t('contactUser')} #{currentUserId}
             </p>
           </div>
           <button
@@ -360,14 +366,16 @@ export default function SkillsEditorPanel({
             className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100 md:self-end"
           >
             <PlusIcon className="h-4 w-4" aria-hidden="true" />
-            Crear skill
+            {t('skillCreate')}
           </button>
         </div>
 
         {isLoading && (
-          <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando skills...
-          </p>
+          <LoadingState
+            className="mt-4"
+            label={t('loadingContent')}
+            variant="compact"
+          />
         )}
 
         {error && (
@@ -396,18 +404,18 @@ export default function SkillsEditorPanel({
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-zinc-950 dark:text-white">
-                  {editor.mode === 'create' ? 'Crear skill' : 'Editar skill'}
+                  {editor.mode === 'create' ? t('skillCreate') : t('skillEdit')}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  DTO CreateSkillDto / UpdateSkillDto
+                  {t('skillEditorDescription')}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-                aria-label="Cerrar editor"
-                title="Cerrar"
+                aria-label={t('editorClose')}
+                title={t('actionClose')}
               >
                 <XMarkIcon className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -415,7 +423,7 @@ export default function SkillsEditorPanel({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label>
-                <span className={labelClass}>SkillName</span>
+                <span className={labelClass}>{t('editorName')}</span>
                 <input
                   value={draft.skillName}
                   maxLength={50}
@@ -431,7 +439,7 @@ export default function SkillsEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>SortOrder</span>
+                <span className={labelClass}>{t('editorSortOrder')}</span>
                 <input
                   type="number"
                   min={0}
@@ -458,7 +466,7 @@ export default function SkillsEditorPanel({
               />
 
               <label>
-                <span className={labelClass}>SkillColor</span>
+                <span className={labelClass}>{t('editorColor')}</span>
                 <div className="flex gap-2">
                   <input
                     type="color"
@@ -474,7 +482,7 @@ export default function SkillsEditorPanel({
                       }))
                     }
                     className="h-10 w-12 cursor-pointer rounded-lg border border-zinc-300 bg-transparent p-1 dark:border-zinc-700"
-                    aria-label="Skill color"
+                    aria-label={t('editorColor')}
                   />
                   <input
                     value={draft.skillColor}
@@ -492,7 +500,7 @@ export default function SkillsEditorPanel({
               </label>
 
               <label className="md:col-span-2">
-                <span className={labelClass}>SkillDescription</span>
+                <span className={labelClass}>{t('editorDescription')}</span>
                 <textarea
                   value={draft.skillDescription}
                   maxLength={500}
@@ -508,7 +516,7 @@ export default function SkillsEditorPanel({
               </label>
 
               <label className="md:col-span-2">
-                <span className={labelClass}>SkillNote</span>
+                <span className={labelClass}>{t('editorNote')}</span>
                 <input
                   value={draft.skillNote}
                   maxLength={250}
@@ -530,14 +538,14 @@ export default function SkillsEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-600"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isSaving ? 'Guardando...' : 'Guardar'}
+                {isSaving ? t('actionSaving') : t('actionSave')}
               </button>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
               >
-                Cancelar
+                {t('actionCancel')}
               </button>
             </div>
           </form>
@@ -545,7 +553,7 @@ export default function SkillsEditorPanel({
 
         {!isLoading && sortedSkills.length === 0 && (
           <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            No hay skills todavia.
+            {t('skillEmpty')}
           </div>
         )}
 

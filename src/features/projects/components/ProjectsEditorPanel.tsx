@@ -12,6 +12,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { ProjectDto, ProjectPayload, ProjectStatus } from '@/features/projects/types/project.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
+import type { AppLanguage } from '@/shared/i18n/i18n.types';
 import Technologies from './Technologies';
 
 interface ProjectsEditorPanelProps {
@@ -104,9 +107,9 @@ function sortProjectImages(project: ProjectDto) {
   );
 }
 
-function createEmptyProjectDraft(projects: ProjectDto[]): ProjectDraft {
+function createEmptyProjectDraft(projects: ProjectDto[], defaultName = 'New project'): ProjectDraft {
   return {
-    name: 'Nuevo proyecto',
+    name: defaultName,
     description: '',
     technologies: '',
     releaseDate: '',
@@ -192,20 +195,22 @@ function splitTechnologies(technologies: string) {
     .filter(Boolean);
 }
 
-function getStatusLabel(status: ProjectStatus) {
+function getStatusLabel(status: ProjectStatus, language: AppLanguage = 'es') {
   const statusValue = String(status);
   const option = statusOptions.find(
     (statusOption) => statusOption.value === statusValue,
   );
 
   if (option) {
-    return option.label;
+    return language === 'en'
+      ? ['Planned', 'In progress', 'Published', 'Archived'][Number(option.value)]
+      : option.label;
   }
 
   const normalizedStatus = statusValue.trim().toLowerCase();
 
   if (normalizedStatus === 'planned' || normalizedStatus === 'planificado') {
-    return 'Planificado';
+    return language === 'en' ? 'Planned' : 'Planificado';
   }
 
   if (
@@ -213,7 +218,7 @@ function getStatusLabel(status: ProjectStatus) {
     normalizedStatus === 'in_progress' ||
     normalizedStatus === 'en progreso'
   ) {
-    return 'En progreso';
+    return language === 'en' ? 'In progress' : 'En progreso';
   }
 
   if (
@@ -221,28 +226,28 @@ function getStatusLabel(status: ProjectStatus) {
     normalizedStatus === 'published' ||
     normalizedStatus === 'publicado'
   ) {
-    return 'Publicado';
+    return language === 'en' ? 'Published' : 'Publicado';
   }
 
   if (normalizedStatus === 'archived' || normalizedStatus === 'archivado') {
-    return 'Archivado';
+    return language === 'en' ? 'Archived' : 'Archivado';
   }
 
-  return statusValue || 'Sin estado';
+  return statusValue || (language === 'en' ? 'No status' : 'Sin estado');
 }
 
-function formatReleaseDate(value?: string | null) {
+function formatReleaseDate(value?: string | null, language: AppLanguage = 'es') {
   if (!value) {
-    return 'Sin fecha';
+    return language === 'en' ? 'No date' : 'Sin fecha';
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Sin fecha';
+    return language === 'en' ? 'No date' : 'Sin fecha';
   }
 
-  return new Intl.DateTimeFormat('es', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -258,6 +263,7 @@ function ProjectCard({
   onEdit: (project: ProjectDto) => void;
   onDelete: (project: ProjectDto) => void;
 }) {
+  const { language, t } = useLanguage();
   const displaySettings = getDisplaySettings(project);
   const technologies = splitTechnologies(project.technologies);
 
@@ -273,16 +279,16 @@ function ProjectCard({
             )}
             {displaySettings.showStatusTag && (
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100">
-                {getStatusLabel(project.status)}
+                {getStatusLabel(project.status, language)}
               </span>
             )}
             <span className="rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-              Orden {project.sortOrder}
+              {t('itemOrder', { number: project.sortOrder })}
             </span>
             {!displaySettings.showProject && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
                 <EyeSlashIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                Oculto
+                {t('projectHidden')}
               </span>
             )}
           </div>
@@ -296,8 +302,8 @@ function ProjectCard({
             type="button"
             onClick={() => onEdit(project)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-700 transition hover:border-cyan-300 hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:border-zinc-800 dark:text-zinc-200 dark:hover:text-cyan-200"
-            aria-label={`Editar ${project.name}`}
-            title="Editar"
+            aria-label={`${t('actionEdit')} ${project.name}`}
+            title={t('actionEdit')}
           >
             <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -305,8 +311,8 @@ function ProjectCard({
             type="button"
             onClick={() => onDelete(project)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
-            aria-label={`Eliminar ${project.name}`}
-            title="Eliminar"
+            aria-label={`${t('actionDelete')} ${project.name}`}
+            title={t('actionDelete')}
           >
             <TrashIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -322,7 +328,7 @@ function ProjectCard({
       <div className="mt-4 grid gap-2 text-sm text-zinc-500 dark:text-zinc-400">
         <p className="flex items-center gap-2">
           <CalendarDaysIcon className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
-          {formatReleaseDate(project.releaseDate)}
+          {formatReleaseDate(project.releaseDate, language)}
         </p>
         {project.collaborators && (
           <p className="flex items-center gap-2">
@@ -374,6 +380,8 @@ export default function ProjectsEditorPanel({
   onUpdateProject,
   onDeleteProject,
 }: ProjectsEditorPanelProps) {
+  const { language, t } = useLanguage();
+  const newProjectName = language === 'es' ? 'Nuevo proyecto' : 'New project';
   const sortedProjects = useMemo(
     () =>
       [...projects].sort(
@@ -384,7 +392,7 @@ export default function ProjectsEditorPanel({
   );
   const [editor, setEditor] = useState<ProjectEditor | null>(null);
   const [draft, setDraft] = useState<ProjectDraft>(() =>
-    createEmptyProjectDraft([]),
+    createEmptyProjectDraft([], newProjectName),
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
@@ -392,7 +400,7 @@ export default function ProjectsEditorPanel({
 
   const openCreateProject = () => {
     setEditor({ mode: 'create' });
-    setDraft(createEmptyProjectDraft(sortedProjects));
+    setDraft(createEmptyProjectDraft(sortedProjects, newProjectName));
     setStatusMessage('');
     setMutationError('');
   };
@@ -406,7 +414,7 @@ export default function ProjectsEditorPanel({
 
   const closeEditor = () => {
     setEditor(null);
-    setDraft(createEmptyProjectDraft(sortedProjects));
+    setDraft(createEmptyProjectDraft(sortedProjects, newProjectName));
     setMutationError('');
   };
 
@@ -485,13 +493,13 @@ export default function ProjectsEditorPanel({
           ? await onCreateProject(payload)
           : await onUpdateProject(editor.projectId, payload);
 
-      setStatusMessage(`Proyecto "${savedProject.name}" guardado.`);
+      setStatusMessage(t('itemSaved', { name: savedProject.name }));
       closeEditor();
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el proyecto.',
+          : t('projectSaveError'),
       );
     } finally {
       setIsSaving(false);
@@ -499,7 +507,7 @@ export default function ProjectsEditorPanel({
   };
 
   const handleDeleteProject = async (project: ProjectDto) => {
-    if (!window.confirm(`Eliminar "${project.name}"?`)) {
+    if (!window.confirm(t('itemDeleteConfirm', { name: project.name }))) {
       return;
     }
 
@@ -513,12 +521,12 @@ export default function ProjectsEditorPanel({
         closeEditor();
       }
 
-      setStatusMessage(`Proyecto "${project.name}" eliminado.`);
+      setStatusMessage(t('itemDeleted', { name: project.name }));
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo eliminar el proyecto.',
+          : t('projectDeleteError'),
       );
     } finally {
       setIsSaving(false);
@@ -531,10 +539,10 @@ export default function ProjectsEditorPanel({
         <div className="flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              Project manager
+              {t('projectsManager')}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-              Proyectos
+              {t('navProjects')}
             </h2>
           </div>
           <button
@@ -543,14 +551,16 @@ export default function ProjectsEditorPanel({
             className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100 md:self-end"
           >
             <PlusIcon className="h-4 w-4" aria-hidden="true" />
-            Crear proyecto
+            {t('projectCreate')}
           </button>
         </div>
 
         {isLoading && (
-          <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando proyectos...
-          </p>
+          <LoadingState
+            className="mt-4"
+            label={t('loadingContent')}
+            variant="compact"
+          />
         )}
 
         {error && (
@@ -580,19 +590,19 @@ export default function ProjectsEditorPanel({
               <div>
                 <p className="text-sm font-semibold text-zinc-950 dark:text-white">
                   {editor.mode === 'create'
-                    ? 'Crear proyecto'
-                    : 'Editar proyecto'}
+                    ? t('projectCreate')
+                    : t('projectEdit')}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  DTO Project y DisplaySettings
+                  {t('projectEditorDescription')}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-                aria-label="Cerrar editor"
-                title="Cerrar"
+                aria-label={t('editorClose')}
+                title={t('actionClose')}
               >
                 <XMarkIcon className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -600,7 +610,7 @@ export default function ProjectsEditorPanel({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label>
-                <span className={labelClass}>Nombre</span>
+                <span className={labelClass}>{t('editorName')}</span>
                 <input
                   value={draft.name}
                   onChange={(event) =>
@@ -615,7 +625,7 @@ export default function ProjectsEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>Fecha de release</span>
+                <span className={labelClass}>{t('projectReleaseDate')}</span>
                 <input
                   type="date"
                   value={draft.releaseDate}
@@ -630,7 +640,7 @@ export default function ProjectsEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>Status</span>
+                <span className={labelClass}>{t('projectStatus')}</span>
                 <select
                   value={draft.status}
                   onChange={(event) =>
@@ -646,14 +656,14 @@ export default function ProjectsEditorPanel({
                   )}
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {getStatusLabel(option.value, language)}
                     </option>
                   ))}
                 </select>
               </label>
 
               <label>
-                <span className={labelClass}>SortOrder</span>
+                <span className={labelClass}>{t('editorSortOrder')}</span>
                 <input
                   type="number"
                   min={0}
@@ -669,7 +679,7 @@ export default function ProjectsEditorPanel({
               </label>
 
               <label>
-                <span className={labelClass}>Colaboradores</span>
+                <span className={labelClass}>{t('projectCollaborators')}</span>
                 <input
                   value={draft.collaborators}
                   onChange={(event) =>
@@ -683,7 +693,7 @@ export default function ProjectsEditorPanel({
               </label>
 
               <label className="md:col-span-2">
-                <span className={labelClass}>Tecnologias</span>
+                <span className={labelClass}>{t('projectTechnologies')}</span>
                 <input
                   value={draft.technologies}
                   onChange={(event) =>
@@ -698,7 +708,7 @@ export default function ProjectsEditorPanel({
               </label>
 
               <label className="md:col-span-2">
-                <span className={labelClass}>Descripcion</span>
+                <span className={labelClass}>{t('editorDescription')}</span>
                 <textarea
                   value={draft.description}
                   onChange={(event) =>
@@ -715,7 +725,7 @@ export default function ProjectsEditorPanel({
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <ToggleField
-                label="Mostrar proyecto"
+                label={t('projectShow')}
                 checked={draft.showProject}
                 onChange={(showProject) =>
                   setDraft((currentDraft) => ({
@@ -725,7 +735,7 @@ export default function ProjectsEditorPanel({
                 }
               />
               <ToggleField
-                label="Mostrar status"
+                label={t('projectShowStatus')}
                 checked={draft.showStatusTag}
                 onChange={(showStatusTag) =>
                   setDraft((currentDraft) => ({
@@ -735,7 +745,7 @@ export default function ProjectsEditorPanel({
                 }
               />
               <ToggleField
-                label="Mostrar iconos"
+                label={t('projectShowIcons')}
                 checked={draft.showIcons}
                 onChange={(showIcons) =>
                   setDraft((currentDraft) => ({
@@ -745,7 +755,7 @@ export default function ProjectsEditorPanel({
                 }
               />
               <ToggleField
-                label="Mostrar tecnologias"
+                label={t('projectShowTechnologies')}
                 checked={draft.showTechnologies}
                 onChange={(showTechnologies) =>
                   setDraft((currentDraft) => ({
@@ -760,10 +770,10 @@ export default function ProjectsEditorPanel({
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-zinc-950 dark:text-white">
-                    Imagenes del proyecto
+                    {t('projectImages')}
                   </p>
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                    URLs de imagen para el carousel interno del proyecto.
+                    {t('projectImagesDescription')}
                   </p>
                 </div>
                 <button
@@ -772,13 +782,13 @@ export default function ProjectsEditorPanel({
                   className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
                 >
                   <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                  Agregar imagen
+                  {t('projectAddImage')}
                 </button>
               </div>
 
               {draft.images.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                  Este proyecto todavia no tiene imagenes.
+                  {t('projectNoImages')}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -788,7 +798,7 @@ export default function ProjectsEditorPanel({
                       className="grid gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem_auto_auto]"
                     >
                       <label>
-                        <span className={labelClass}>ImageUrl</span>
+                        <span className={labelClass}>{t('projectImageUrl')}</span>
                         <input
                           type="url"
                           value={image.imageUrl}
@@ -803,7 +813,7 @@ export default function ProjectsEditorPanel({
                         />
                       </label>
                       <label>
-                        <span className={labelClass}>AltText</span>
+                        <span className={labelClass}>{t('projectImageAlt')}</span>
                         <input
                           value={image.altText}
                           onChange={(event) =>
@@ -816,7 +826,7 @@ export default function ProjectsEditorPanel({
                         />
                       </label>
                       <label>
-                        <span className={labelClass}>Orden</span>
+                        <span className={labelClass}>{t('editorSortOrder')}</span>
                         <input
                           type="number"
                           min={0}
@@ -838,14 +848,14 @@ export default function ProjectsEditorPanel({
                           onChange={() => setCoverImageDraft(index)}
                           className="h-4 w-4 accent-cyan-700"
                         />
-                        Cover
+                        {t('projectCover')}
                       </label>
                       <button
                         type="button"
                         onClick={() => removeImageDraft(index)}
                         className="inline-flex h-10 w-10 items-center justify-center self-end rounded-lg border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
-                        aria-label="Eliminar imagen"
-                        title="Eliminar imagen"
+                        aria-label={t('projectDeleteImage')}
+                        title={t('projectDeleteImage')}
                       >
                         <TrashIcon className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -862,14 +872,14 @@ export default function ProjectsEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-600"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isSaving ? 'Guardando...' : 'Guardar'}
+                {isSaving ? t('actionSaving') : t('actionSave')}
               </button>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
               >
-                Cancelar
+                {t('actionCancel')}
               </button>
             </div>
           </form>
@@ -877,7 +887,7 @@ export default function ProjectsEditorPanel({
 
         {!isLoading && sortedProjects.length === 0 && (
           <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            No hay proyectos todavia.
+            {t('projectEmpty')}
           </div>
         )}
 
@@ -899,7 +909,7 @@ export default function ProjectsEditorPanel({
         ) && (
           <p className="mt-4 inline-flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             <EyeIcon className="h-4 w-4" aria-hidden="true" />
-            Los proyectos ocultos se conservan en el CRUD pero no deberian mostrarse en vistas publicas.
+            {t('projectHiddenNotice')}
           </p>
         )}
       </div>

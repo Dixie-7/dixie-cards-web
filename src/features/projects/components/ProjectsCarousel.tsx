@@ -6,6 +6,8 @@ import {
 } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ProjectDto, ProjectImageDto, ProjectStatus } from '@/features/projects/types/project.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import Technologies from './Technologies';
 
 interface ProjectsCarouselProps {
@@ -40,19 +42,22 @@ function sortImages(images: ProjectImageDto[]) {
   });
 }
 
-function getStatusLabel(status: ProjectStatus) {
+function getStatusLabel(
+  status: ProjectStatus,
+  labels: Record<'planned' | 'inProgress' | 'published' | 'archived', string>,
+) {
   const statusValue = String(status);
   const statusMap: Record<string, string> = {
-    '0': 'Planificado',
-    '1': 'En progreso',
-    '2': 'Publicado',
-    '3': 'Archivado',
-    planned: 'Planificado',
-    inprogress: 'En progreso',
-    in_progress: 'En progreso',
-    released: 'Publicado',
-    published: 'Publicado',
-    archived: 'Archivado',
+    '0': labels.planned,
+    '1': labels.inProgress,
+    '2': labels.published,
+    '3': labels.archived,
+    planned: labels.planned,
+    inprogress: labels.inProgress,
+    in_progress: labels.inProgress,
+    released: labels.published,
+    published: labels.published,
+    archived: labels.archived,
   };
 
   return statusMap[statusValue.trim().toLowerCase()] ?? statusValue;
@@ -63,6 +68,13 @@ export default function ProjectsCarousel({
   isLoading = false,
   error = null,
 }: ProjectsCarouselProps) {
+  const { t } = useLanguage();
+  const statusLabels = {
+    planned: t('projectPlanned'),
+    inProgress: t('projectInProgress'),
+    published: t('projectPublished'),
+    archived: t('projectArchived'),
+  };
   const visibleProjects = useMemo(
     () =>
       projects
@@ -155,9 +167,7 @@ export default function ProjectsCarousel({
       <div className="w-full overflow-hidden rounded-lg bg-zinc-900 shadow-2xl shadow-black/30">
         <div className="relative min-h-[560px] w-full overflow-hidden sm:min-h-[620px] lg:min-h-[680px]">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950 text-sm font-semibold text-zinc-300">
-              Cargando proyectos...
-            </div>
+            <LoadingState variant="overlay" label={t('loadingContent')} />
           )}
 
           {!isLoading && error && (
@@ -170,7 +180,7 @@ export default function ProjectsCarousel({
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950 px-6 text-center text-zinc-300">
               <PhotoIcon className="h-10 w-10 text-cyan-200" aria-hidden="true" />
               <p className="text-sm font-semibold">
-                No hay proyectos visibles para mostrar en el carousel.
+                {t('projectsEmpty')}
               </p>
             </div>
           )}
@@ -216,8 +226,8 @@ export default function ProjectsCarousel({
                       />
                       <p className="text-sm font-semibold">
                         {currentImage
-                          ? 'No se pudo cargar esta imagen.'
-                          : 'Este proyecto no tiene imagenes cargadas.'}
+                          ? t('projectsImageError')
+                          : t('projectsNoImages')}
                       </p>
                     </div>
                   )}
@@ -237,7 +247,7 @@ export default function ProjectsCarousel({
                         whileHover={{ scale: 1.08, x: -2 }}
                         whileTap={{ scale: 0.96 }}
                         className="absolute left-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center px-2 py-10 text-white/70 drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)] transition hover:text-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 sm:left-5"
-                        aria-label="Imagen anterior del proyecto"
+                        aria-label={t('previousImage')}
                       >
                         <span
                           className="inline-block scale-y-[2.6] text-6xl font-light leading-none sm:text-7xl"
@@ -252,7 +262,7 @@ export default function ProjectsCarousel({
                         whileHover={{ scale: 1.08, x: 2 }}
                         whileTap={{ scale: 0.96 }}
                         className="absolute right-3 top-1/2 z-10 inline-flex -translate-y-1/2 items-center justify-center px-2 py-10 text-white/70 drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)] transition hover:text-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 sm:right-5"
-                        aria-label="Imagen siguiente del proyecto"
+                        aria-label={t('nextImage')}
                       >
                         <span
                           className="inline-block scale-y-[2.6] text-6xl font-light leading-none sm:text-7xl"
@@ -276,7 +286,7 @@ export default function ProjectsCarousel({
                               ? 'h-8 w-1.5 bg-cyan-300'
                               : 'h-4 w-1.5 bg-white/55 hover:h-6 hover:bg-white'
                           }`}
-                          aria-label={`Ver imagen ${index + 1} del proyecto`}
+                          aria-label={t('viewProjectImage', { number: index + 1 })}
                         />
                       ))}
                     </div>
@@ -286,11 +296,14 @@ export default function ProjectsCarousel({
                 <div className="flex flex-1 flex-col gap-5 bg-zinc-950 px-5 py-5 text-left sm:px-7">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-2.5 py-1 text-xs font-semibold text-cyan-100">
-                      Proyecto {safeProjectIndex + 1} de {visibleProjects.length}
+                      {t('projectCount', {
+                        current: safeProjectIndex + 1,
+                        total: visibleProjects.length,
+                      })}
                     </span>
                     {currentSettings.showStatusTag && (
                       <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-100">
-                        {getStatusLabel(currentProject.status)}
+                        {getStatusLabel(currentProject.status, statusLabels)}
                       </span>
                     )}
                   </div>
@@ -303,7 +316,7 @@ export default function ProjectsCarousel({
 
                   {currentProject.collaborators && (
                     <p className="text-center text-sm font-medium text-zinc-300">
-                      Colaboradores:{' '}
+                      {t('projectCollaborators')}:{' '}
                       <span className="text-zinc-100">
                         {currentProject.collaborators}
                       </span>
@@ -320,10 +333,10 @@ export default function ProjectsCarousel({
                             whileHover={{ x: -2, y: -1 }}
                             whileTap={{ scale: 0.96 }}
                             className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cyan-300/20 bg-zinc-900/80 px-2.5 text-[0.68rem] font-bold uppercase tracking-normal text-cyan-100 shadow-sm shadow-black/20 transition hover:border-cyan-200/70 hover:bg-cyan-950 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
-                            aria-label="Proyecto anterior"
+                            aria-label={t('previousProject')}
                           >
                             <ChevronLeftIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Prev</span>
+                            <span>{t('previousShort')}</span>
                           </motion.button>
                         )}
                       </div>
@@ -345,9 +358,9 @@ export default function ProjectsCarousel({
                             whileHover={{ x: 2, y: -1 }}
                             whileTap={{ scale: 0.96 }}
                             className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cyan-300/20 bg-zinc-900/80 px-2.5 text-[0.68rem] font-bold uppercase tracking-normal text-cyan-100 shadow-sm shadow-black/20 transition hover:border-cyan-200/70 hover:bg-cyan-950 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
-                            aria-label="Proyecto siguiente"
+                            aria-label={t('nextProject')}
                           >
-                            <span>Next</span>
+                            <span>{t('nextShort')}</span>
                             <ChevronRightIcon className="h-3.5 w-3.5" aria-hidden="true" />
                           </motion.button>
                         )}

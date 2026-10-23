@@ -18,6 +18,8 @@ import FloatingNavbar, {
   type FloatingNavbarItem,
 } from '@/shared/components/FloatingNavbar';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 const publicContactVisibility = {
   ...defaultUserConfigPayload,
@@ -77,6 +79,7 @@ function PublicPortfolioStatus({
 }
 
 function PublicPortfolioPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { username } = useParams();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -87,20 +90,15 @@ function PublicPortfolioPage() {
     usePublicPortfolio(username);
 
   if (isLoading) {
-    return (
-      <PublicPortfolioStatus
-        title="Cargando portfolio"
-        message="Estamos preparando la vista publica."
-      />
-    );
+    return <LoadingState variant="screen" label={t('loadingPortfolio')} />;
   }
 
   if (error || !portfolio) {
     return (
       <PublicPortfolioStatus
-        title={isNotFound ? 'Portfolio no encontrado' : 'No pudimos cargarlo'}
+        title={isNotFound ? t('portfolioNotFound') : t('portfolioLoadError')}
         message={
-          error ?? 'Ocurrio un problema al cargar este portfolio publico.'
+          error ?? t('portfolioLoadErrorMessage')
         }
       />
     );
@@ -120,21 +118,21 @@ function PublicPortfolioPage() {
     Boolean(portfolio.cv);
   const displayName = getDisplayName(portfolio);
   const navigationItems: FloatingNavbarItem[] = [
-    { label: 'Home', href: '/' },
+    { label: t('navHome'), href: '/' },
     ...(portfolio.projects.length > 0
-      ? [{ label: 'Projects', href: '#projects' }]
+      ? [{ label: t('navProjects'), href: '#projects' }]
       : []),
     ...(portfolioCards.length > 0
-      ? [{ label: 'DCards', href: '#dcards' }]
+      ? [{ label: t('navCards'), href: '#dcards' }]
       : []),
     ...(portfolio.skills.length > 0
-      ? [{ label: 'Skills', href: '#skills' }]
+      ? [{ label: t('navSkills'), href: '#skills' }]
       : []),
     ...(portfolio.languages.length > 0
-      ? [{ label: 'Language', href: '#language' }]
+      ? [{ label: t('navLanguages'), href: '#language' }]
       : []),
     ...(portfolio.cv ? [{ label: 'CV', href: '#cv' }] : []),
-    ...(portfolio.contact ? [{ label: 'Contact', href: '#contact' }] : []),
+    ...(portfolio.contact ? [{ label: t('navContact'), href: '#contact' }] : []),
   ];
 
   return (
@@ -146,11 +144,11 @@ function PublicPortfolioPage() {
 
       <FloatingNavbar
         brandHref="/"
-        authenticatedPrimaryLabel="Mi portfolio"
+        authenticatedPrimaryLabel={t('navPortfolio')}
         isAuthenticated={isAuthenticated}
         isEditMode={false}
         navigationItems={navigationItems}
-        ownerLabel={`${displayName} (@${portfolio.username})`}
+        ownerLabel={t('portfolioOwner', { username: portfolio.username })}
         loginButtonRef={loginButtonRef}
         configButtonRef={configButtonRef}
         onOpenLogin={() => setIsLoginModalOpen(true)}
@@ -176,7 +174,11 @@ function PublicPortfolioPage() {
 
       {portfolioCards.length > 0 && (
         <div id="dcards" className="app-section-anchor">
-          <UserCardsSection cards={portfolioCards} />
+          <UserCardsSection
+            cards={portfolioCards}
+            // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+            // showCardNumber={portfolio.showCardNumber}
+          />
         </div>
       )}
 
@@ -206,7 +208,7 @@ function PublicPortfolioPage() {
       {!hasPublicContent && (
         <section className="w-full px-4 py-16">
           <div className="mx-auto max-w-5xl rounded-lg border border-dashed border-zinc-700 p-6 text-left text-sm text-zinc-300">
-            Este portfolio no tiene contenido publico disponible por ahora.
+            {t('portfolioEmpty')}
           </div>
         </section>
       )}
@@ -214,7 +216,7 @@ function PublicPortfolioPage() {
       {portfolio.songUrl && (
         <MusicPlayer
           allowSourceEditing={false}
-          sourceTitle={`Musica de ${displayName}`}
+          sourceTitle={t('musicBy', { name: displayName })}
           sourceUrl={portfolio.songUrl}
           startPlaying={false}
         />

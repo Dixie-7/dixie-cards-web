@@ -10,6 +10,8 @@ import {
 } from 'react-router-dom';
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 const LandingPage = lazy(() => import('@/features/landing/pages/LandingPage'));
 const LearnDixiePage = lazy(
@@ -63,17 +65,12 @@ function ProtectedPortfolioRoute() {
 }
 
 function App() {
+  const { t } = useLanguage();
+
   return (
     <BrowserRouter>
       <Suspense
-        fallback={
-          <div
-            className="grid min-h-screen place-items-center bg-zinc-950 text-sm font-medium text-zinc-400"
-            role="status"
-          >
-            Loading Dixie Cards…
-          </div>
-        }
+        fallback={<LoadingState variant="screen" label={`${t('loadingContent')}: Dixie Cards`} />}
       >
         <Routes>
           <Route path="/" element={withAuthProvider(<LandingPage />)} />

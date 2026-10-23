@@ -117,16 +117,16 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       title: 'Conocé Dixie Cards por dentro.',
       description:
         'Aprendé a crear tu portfolio paso a paso y descubrí las decisiones de producto y desarrollo detrás de la plataforma.',
-      tutorialLabel: 'Tutorial del producto',
-      storyLabel: 'Cómo se construyó',
-      button: 'Teach me about Dixie Cards',
+      tutorialLabel: 'Ayúdame a crear un portfolio',
+      storyLabel: 'Acerca de Dixie Cards',
+      button: 'Enséñame!',
     },
     preview: {
       eyebrow: 'Esto podría ser tuyo',
       title: 'Un portfolio que se entiende antes de empezar a leer.',
       description:
         'Esta demo usa las mismas estructuras que el producto: MainCard, proyectos, UserCards, skills, idiomas y contacto.',
-      browserLabel: 'dixie.cards/sofia.rios',
+      browserLabel: 'DixieCards.com/sofia_rios',
       profileRole: 'Creative developer',
       profileBio:
         'Diseño y construyo experiencias digitales donde la tecnología se siente humana.',
@@ -288,7 +288,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       title: 'A portfolio you understand before you start reading.',
       description:
         'This demo uses the same structures as the product: MainCard, projects, UserCards, skills, languages and contact.',
-      browserLabel: 'dixie.cards/sofia.rios',
+      browserLabel: 'DixieCards.com/sofia_rios',
       profileRole: 'Creative developer',
       profileBio:
         'I design and build digital experiences where technology feels human.',

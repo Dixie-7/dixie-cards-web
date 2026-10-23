@@ -109,7 +109,7 @@ export function PortfolioPreviewSection({
                     <span key={technology}>{technology}</span>
                   ))}
                 </div>
-                <small>CON {landingDemoProject.collaborators}</small>
+                <small>Collaborators: {landingDemoProject.collaborators}</small>
               </div>
             </article>
 
@@ -124,7 +124,7 @@ export function PortfolioPreviewSection({
                   <p>{card.description}</p>
                   <div className="real-user-card__blocks">
                     {card.blocks.map((block) => (
-                      <span key={block.id}>{block.type} / {block.template}</span>
+                      <span key={block.id}>{block.template}</span>
                     ))}
                   </div>
                 </article>

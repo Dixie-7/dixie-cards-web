@@ -22,6 +22,7 @@ import type {
 } from '@/features/user-config/types/userConfig.types';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
 import BaseModal from '@/shared/components/Modal/BaseModal';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import './ParticlesConfigModal.css';
 
 interface ParticlesConfigModalProps {
@@ -219,8 +220,10 @@ export default function ParticlesConfigModal({
   onSave,
   restoreFocusRef,
 }: ParticlesConfigModalProps) {
+  const { language, t } = useLanguage();
+  const isSpanish = language === 'es';
   const { draft, updateField, validationError, reset } =
-    useParticlesConfigDraft(config);
+    useParticlesConfigDraft(config, language);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const shouldReduceMotion = useReducedMotion() ?? false;
@@ -242,7 +245,9 @@ export default function ParticlesConfigModal({
       setSaveError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el fondo.',
+          : isSpanish
+            ? 'No se pudo guardar el fondo.'
+            : 'The background could not be saved.',
       );
     } finally {
       setIsSaving(false);
@@ -253,8 +258,10 @@ export default function ParticlesConfigModal({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Personalizar fondo"
-      description="Definí el movimiento, la forma y la interacción de las partículas de tu portfolio."
+      title={isSpanish ? 'Personalizar fondo' : 'Customize background'}
+      description={isSpanish
+        ? 'Define el movimiento, la forma y la interaccion de las particulas de tu portfolio.'
+        : 'Define the movement, shape and interaction of your portfolio particles.'}
       size="xl"
       restoreFocusRef={restoreFocusRef}
     >
@@ -270,22 +277,26 @@ export default function ParticlesConfigModal({
             <div className="flex items-start justify-between gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[11px] font-semibold text-violet-100 backdrop-blur">
                 <SparklesIcon className="h-3.5 w-3.5" />
-                Vista previa en vivo
+                {isSpanish ? 'Vista previa en vivo' : 'Live preview'}
               </span>
               <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-300 backdrop-blur">
-                {draft.enabled ? `${draft.count} partículas` : 'Desactivado'}
+                {draft.enabled
+                  ? `${draft.count} ${isSpanish ? 'particulas' : 'particles'}`
+                  : isSpanish ? 'Desactivado' : 'Disabled'}
               </span>
             </div>
             <div>
               <p className="max-w-sm text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                Tu contenido siempre al frente.
+                {isSpanish ? 'Tu contenido siempre al frente.' : 'Your content always stays in front.'}
               </p>
               <p className="mt-2 max-w-md text-xs leading-5 text-zinc-400">
-                El fondo acompaña la identidad visual sin competir con el portfolio.
+                {isSpanish
+                  ? 'El fondo acompana la identidad visual sin competir con el portfolio.'
+                  : 'The background supports your visual identity without competing with the portfolio.'}
               </p>
               {shouldReduceMotion && (
                 <span className="mt-3 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100">
-                  Movimiento reducido activo
+                  {isSpanish ? 'Movimiento reducido activo' : 'Reduced motion enabled'}
                 </span>
               )}
             </div>
@@ -293,8 +304,10 @@ export default function ParticlesConfigModal({
         </section>
 
         <ToggleControl
-          label="Activar partículas"
-          description="Muestra este fondo en tu portfolio personal y público."
+          label={isSpanish ? 'Activar particulas' : 'Enable particles'}
+          description={isSpanish
+            ? 'Muestra este fondo en tu portfolio personal y publico.'
+            : 'Show this background on your personal and public portfolio.'}
           checked={draft.enabled}
           onChange={(checked) => updateField('enabled', checked)}
         />
@@ -303,10 +316,12 @@ export default function ParticlesConfigModal({
           <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center gap-2">
               <SparklesIcon className="h-4 w-4 text-violet-300" />
-              <h3 className="text-sm font-semibold text-white">Apariencia</h3>
+              <h3 className="text-sm font-semibold text-white">
+                {isSpanish ? 'Apariencia' : 'Appearance'}
+              </h3>
             </div>
             <RangeControl
-              label="Cantidad"
+              label={isSpanish ? 'Cantidad' : 'Count'}
               value={draft.count}
               min={0}
               max={100}
@@ -314,14 +329,19 @@ export default function ParticlesConfigModal({
               onChange={(value) => updateField('count', value)}
             />
             <ColorControl
-              label="Color de partículas"
+              label={isSpanish ? 'Color de particulas' : 'Particle color'}
               value={draft.color}
               onChange={(value) => updateField('color', value)}
             />
             <SelectControl
-              label="Forma"
+              label={isSpanish ? 'Forma' : 'Shape'}
               value={draft.shape}
-              options={shapeOptions}
+              options={shapeOptions.map((option) => ({
+                ...option,
+                label: isSpanish
+                  ? option.label
+                  : ({ circle: 'Circles', square: 'Squares', triangle: 'Triangles', star: 'Stars', basic: 'Mixed shapes' } as const)[option.value],
+              }))}
               onChange={(value) => updateField('shape', value)}
             />
           </section>
@@ -330,12 +350,12 @@ export default function ParticlesConfigModal({
             <div className="flex items-center gap-2">
               <BoltIcon className="h-4 w-4 text-cyan-300" />
               <h3 className="text-sm font-semibold text-white">
-                Tamaño y movimiento
+                {isSpanish ? 'Tamano y movimiento' : 'Size and movement'}
               </h3>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <RangeControl
-                label="Tamaño mínimo"
+                label={isSpanish ? 'Tamano minimo' : 'Minimum size'}
                 value={draft.minSize}
                 min={1}
                 max={12}
@@ -344,7 +364,7 @@ export default function ParticlesConfigModal({
                 onChange={(value) => updateField('minSize', value)}
               />
               <RangeControl
-                label="Tamaño máximo"
+                label={isSpanish ? 'Tamano maximo' : 'Maximum size'}
                 value={draft.maxSize}
                 min={1}
                 max={12}
@@ -354,7 +374,7 @@ export default function ParticlesConfigModal({
               />
             </div>
             <RangeControl
-              label="Velocidad"
+              label={isSpanish ? 'Velocidad' : 'Speed'}
               value={draft.speed}
               min={0}
               max={5}
@@ -362,13 +382,18 @@ export default function ParticlesConfigModal({
               onChange={(value) => updateField('speed', value)}
             />
             <SelectControl
-              label="Dirección"
+              label={isSpanish ? 'Direccion' : 'Direction'}
               value={draft.direction}
-              options={directionOptions}
+              options={directionOptions.map((option) => ({
+                ...option,
+                label: isSpanish
+                  ? option.label
+                  : ({ none: 'Free', top: 'Up', bottom: 'Down', left: 'Left', right: 'Right' } as const)[option.value],
+              }))}
               onChange={(value) => updateField('direction', value)}
             />
             <RangeControl
-              label="Opacidad"
+              label={isSpanish ? 'Opacidad' : 'Opacity'}
               value={draft.opacity}
               min={0}
               max={1}
@@ -380,16 +405,20 @@ export default function ParticlesConfigModal({
           <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center gap-2">
               <LinkIcon className="h-4 w-4 text-violet-300" />
-              <h3 className="text-sm font-semibold text-white">Conexiones</h3>
+              <h3 className="text-sm font-semibold text-white">
+                {isSpanish ? 'Conexiones' : 'Connections'}
+              </h3>
             </div>
             <ToggleControl
-              label="Unir partículas"
-              description="Dibuja líneas entre partículas cercanas."
+              label={isSpanish ? 'Unir particulas' : 'Connect particles'}
+              description={isSpanish
+                ? 'Dibuja lineas entre particulas cercanas.'
+                : 'Draw lines between nearby particles.'}
               checked={draft.linksEnabled}
               onChange={(checked) => updateField('linksEnabled', checked)}
             />
             <ColorControl
-              label="Color de conexiones"
+              label={isSpanish ? 'Color de conexiones' : 'Connection color'}
               value={draft.linksColor}
               onChange={(value) => updateField('linksColor', value)}
             />
@@ -398,18 +427,27 @@ export default function ParticlesConfigModal({
           <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center gap-2">
               <CursorArrowRaysIcon className="h-4 w-4 text-cyan-300" />
-              <h3 className="text-sm font-semibold text-white">Interacción</h3>
+              <h3 className="text-sm font-semibold text-white">
+                {isSpanish ? 'Interaccion' : 'Interaction'}
+              </h3>
             </div>
             <ToggleControl
-              label="Responder al cursor"
-              description="Activa una reacción sutil al mover el mouse."
+              label={isSpanish ? 'Responder al cursor' : 'Respond to cursor'}
+              description={isSpanish
+                ? 'Activa una reaccion sutil al mover el mouse.'
+                : 'Enable a subtle reaction when the pointer moves.'}
               checked={draft.hoverEnabled}
               onChange={(checked) => updateField('hoverEnabled', checked)}
             />
             <SelectControl
-              label="Efecto al pasar el cursor"
+              label={isSpanish ? 'Efecto al pasar el cursor' : 'Cursor hover effect'}
               value={draft.hoverMode}
-              options={hoverModeOptions}
+              options={hoverModeOptions.map((option) => ({
+                ...option,
+                label: isSpanish
+                  ? option.label
+                  : ({ repulse: 'Repulse', grab: 'Connect', bubble: 'Expand' } as const)[option.value],
+              }))}
               onChange={(value) => updateField('hoverMode', value)}
             />
           </section>
@@ -431,7 +469,7 @@ export default function ParticlesConfigModal({
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-violet-400/60 hover:text-white"
           >
             <ArrowPathIcon className="h-4 w-4" />
-            Descartar cambios
+            {isSpanish ? 'Descartar cambios' : 'Discard changes'}
           </button>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <button
@@ -439,7 +477,7 @@ export default function ParticlesConfigModal({
               onClick={onClose}
               className="rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500"
             >
-              Cancelar
+              {t('actionCancel')}
             </button>
             <button
               type="submit"
@@ -447,7 +485,9 @@ export default function ParticlesConfigModal({
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
             >
               <CheckIcon className="h-4 w-4" />
-              {isSaving ? 'Guardando…' : 'Guardar fondo'}
+              {isSaving
+                ? t('actionSaving')
+                : isSpanish ? 'Guardar fondo' : 'Save background'}
             </button>
           </div>
         </div>

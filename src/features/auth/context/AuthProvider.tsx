@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { AuthContext } from '@/features/auth/context/AuthContext';
 import { authApi } from '@/features/auth/api/authApi';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import {
   clearAuthSession,
   getStoredAuthSession,
@@ -33,6 +34,7 @@ function createSessionFromLoginResponse(
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const { language, t } = useLanguage();
   const [session, setSession] = useState<AuthSession | null>(() =>
     getStoredAuthSession(),
   );
@@ -45,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await authApi.login(credentials);
 
       if (!result.success || !result.data) {
-        throw new Error(result.message ?? 'No se pudo iniciar sesion.');
+        throw new Error(result.message ?? t('authLoginError'));
       }
 
       const nextSession = createSessionFromLoginResponse(result.data);
@@ -55,7 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const register = useCallback(async (credentials: RegisterRequestDto) => {
     setIsLoading(true);
@@ -64,14 +66,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await authApi.register(credentials);
 
       if (!result.success) {
-        throw new Error(result.message ?? 'No se pudo completar el registro.');
+        throw new Error(result.message ?? t('authRegisterError'));
       }
 
       return result.message;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const verifyEmail = useCallback(async (payload: VerifyEmailRequestDto) => {
     setIsLoading(true);
@@ -80,14 +82,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await authApi.verifyEmail(payload);
 
       if (!result.success) {
-        throw new Error(result.message ?? 'No se pudo verificar el email.');
+        throw new Error(
+          result.message ??
+            (language === 'en'
+              ? 'The email could not be verified.'
+              : 'No se pudo verificar el email.'),
+        );
       }
 
       return result.message;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [language]);
 
   const resendVerification = useCallback(
     async (payload: ResendVerificationRequestDto) => {
@@ -98,7 +105,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (!result.success) {
           throw new Error(
-            result.message ?? 'No se pudo reenviar la verificacion.',
+            result.message ??
+              (language === 'en'
+                ? 'The verification email could not be resent.'
+                : 'No se pudo reenviar la verificacion.'),
           );
         }
 
@@ -107,7 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
       }
     },
-    [],
+    [language],
   );
 
   const logout = useCallback(() => {

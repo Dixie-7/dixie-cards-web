@@ -12,14 +12,12 @@ import {
 import ReactPlayer from 'react-player';
 import { getMusicPlayerSource } from '@/features/music-player/api/musicPlayerApi';
 import type { MusicPlayerSource } from '@/features/music-player/types/musicPlayer.types';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import './MusicPlayer.css';
 
-const defaultMusicUrl =
-  'https://www.youtube.com/watch?v=stVlz3nKUtc&list=RDstVlz3nKUtc';
-
 const initialSource: MusicPlayerSource = {
-  title: 'Cargando musica',
-  url: defaultMusicUrl,
+  title: '',
+  url: '',
 };
 
 interface MusicPlayerProps {
@@ -35,6 +33,7 @@ function MusicPlayer({
   sourceUrl,
   startPlaying = true,
 }: MusicPlayerProps) {
+  const { t } = useLanguage();
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [source, setSource] = useState<MusicPlayerSource>(initialSource);
   const [isEditingUrl, setIsEditingUrl] = useState(false);
@@ -54,7 +53,7 @@ function MusicPlayer({
 
         if (isMounted) {
           setSource({
-            title: sourceTitle ?? getManualSourceTitle(nextUrl),
+            title: sourceTitle ?? getManualSourceTitle(nextUrl, t('musicManual')),
             url: nextUrl,
           });
           setDraftUrl(nextUrl);
@@ -82,7 +81,7 @@ function MusicPlayer({
     return () => {
       isMounted = false;
     };
-  }, [sourceTitle, sourceUrl, startPlaying]);
+  }, [sourceTitle, sourceUrl, startPlaying, t]);
 
   if (!source.url) {
     return null;
@@ -108,7 +107,7 @@ function MusicPlayer({
     }
 
     setSource({
-      title: getManualSourceTitle(nextUrl),
+      title: getManualSourceTitle(nextUrl, t('musicManual')),
       url: nextUrl,
     });
     setIsPlaying(true);
@@ -168,15 +167,15 @@ function MusicPlayer({
   const displayedVolume = isMuted ? 0 : volume;
 
   return (
-    <aside className="music-player" aria-label="Reproductor de musica">
+    <aside className="music-player" aria-label={t('musicPlayer')}>
       <div className="music-player__header">
         <span className="music-player__label">{source.title}</span>
         {allowSourceEditing && (
           <button
             type="button"
             className="music-player__icon-button"
-            aria-label="Cambiar cancion o playlist"
-            title="Cambiar cancion o playlist"
+            aria-label={t('musicChangeSource')}
+            title={t('musicChangeSource')}
             onClick={handleOpenUrlEditor}
           >
             <LinkIcon aria-hidden="true" />
@@ -190,7 +189,7 @@ function MusicPlayer({
             className="music-player__input"
             type="url"
             value={draftUrl}
-            aria-label="URL de cancion o playlist"
+            aria-label={t('musicSourceUrl')}
             placeholder="https://..."
             required
             onChange={(event) => setDraftUrl(event.target.value)}
@@ -198,16 +197,16 @@ function MusicPlayer({
           <button
             type="submit"
             className="music-player__icon-button music-player__icon-button--confirm"
-            aria-label="Reproducir URL"
-            title="Reproducir URL"
+            aria-label={t('musicPlayUrl')}
+            title={t('musicPlayUrl')}
           >
             <CheckIcon aria-hidden="true" />
           </button>
           <button
             type="button"
             className="music-player__icon-button"
-            aria-label="Cancelar cambio de URL"
-            title="Cancelar"
+            aria-label={t('musicCancelUrl')}
+            title={t('actionCancel')}
             onClick={handleCancelUrlEditor}
           >
             <XMarkIcon aria-hidden="true" />
@@ -220,8 +219,8 @@ function MusicPlayer({
           <button
             type="button"
             className="music-player__icon-button"
-            aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-            title={isPlaying ? 'Pausar' : 'Reproducir'}
+            aria-label={isPlaying ? t('musicPause') : t('musicPlay')}
+            title={isPlaying ? t('musicPause') : t('musicPlay')}
             onClick={() => setIsPlaying((currentValue) => !currentValue)}
           >
             {isPlaying ? (
@@ -234,8 +233,8 @@ function MusicPlayer({
             <button
               type="button"
               className="music-player__icon-button"
-              aria-label="Mutear"
-              title="Mutear"
+              aria-label={t('musicMute')}
+              title={t('musicMute')}
               onClick={handleToggleMute}
             >
               {isMuted || volume === 0 ? (
@@ -252,7 +251,7 @@ function MusicPlayer({
                 max="1"
                 step="0.01"
                 value={displayedVolume}
-                aria-label="Volumen"
+                aria-label={t('musicVolume')}
                 style={{
                   background: getVolumeRangeBackground(displayedVolume),
                 }}
@@ -267,7 +266,7 @@ function MusicPlayer({
             max={durationSeconds || 0}
             step="1"
             value={safePlayedSeconds}
-            aria-label="Navegar por la cancion"
+            aria-label={t('musicSeek')}
             disabled={!durationSeconds}
             onChange={(event) => handleSeek(event.target.value)}
           />
@@ -296,12 +295,12 @@ function MusicPlayer({
   );
 }
 
-function getManualSourceTitle(url: string) {
+function getManualSourceTitle(url: string, fallbackTitle = 'Manual playback') {
   try {
     const { hostname } = new URL(url);
-    return hostname.replace(/^www\./, '') || 'Reproduccion manual';
+    return hostname.replace(/^www\./, '') || fallbackTitle;
   } catch {
-    return 'Reproduccion manual';
+    return fallbackTitle;
   }
 }
 

@@ -44,10 +44,14 @@ import UserCard from './UserCard';
 import UserCardsEditSection from './UserCardsEditSection';
 import UserCardsSection from './UserCardsSection';
 import type { StatusToastKind } from '@/shared/components/StatusToast';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 interface UserCardsEditorPanelProps {
   cards: UserCardDto[];
   displayCards: UserCardDto[];
+  // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+  // showCardNumber?: boolean;
   isEditMode: boolean;
   isLoading: boolean;
   error: string | null;
@@ -192,9 +196,9 @@ function getSafeSortOrder(sortOrder: number) {
   return Math.max(0, Math.round(sortOrder));
 }
 
-function createEmptyCardDraft(cards: UserCardDto[]): CardDraft {
+function createEmptyCardDraft(cards: UserCardDto[], defaultTitle = 'New portfolio card'): CardDraft {
   return {
-    title: 'New portfolio card',
+    title: defaultTitle,
     description: '',
     template: 'default',
     styleText: '',
@@ -214,10 +218,10 @@ function createCardDraft(card: UserCardDto): CardDraft {
   };
 }
 
-function createEmptyBlockDraft(blocks: UserCardBlockDto[]): BlockDraft {
+function createEmptyBlockDraft(blocks: UserCardBlockDto[], defaultTitle = 'New block'): BlockDraft {
   return {
     type: 'text',
-    title: 'New block',
+    title: defaultTitle,
     content: 'Write the block content here.',
     mediaUrl: '',
     icon: '',
@@ -334,9 +338,11 @@ function IconSelect({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { language, t } = useLanguage();
+
   return (
     <label>
-      <span className={labelClass}>Icon</span>
+      <span className={labelClass}>{t('editorIcon')}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -344,7 +350,13 @@ function IconSelect({
       >
         {blockIconOptions.map((option) => (
           <option key={option.value || 'auto'} value={option.value}>
-            {option.label}
+            {language === 'en'
+              ? option.value === ''
+                ? 'Automatic by type'
+                : option.value === 'none'
+                  ? 'No icon'
+                  : option.value.charAt(0).toUpperCase() + option.value.slice(1)
+              : option.label}
           </option>
         ))}
       </select>
@@ -397,12 +409,13 @@ function SortOrderControl({
   max: number;
   onChange: (value: number) => void;
 }) {
+  const { t } = useLanguage();
   const safeValue = getSafeSortOrder(value);
   const safeMax = Math.max(10, getSafeSortOrder(max), safeValue);
 
   return (
     <label>
-      <span className={labelClass}>Sort order</span>
+      <span className={labelClass}>{t('editorSortOrder')}</span>
       <div className="grid gap-2">
         <input
           type="number"
@@ -443,6 +456,14 @@ function HexColorControls({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { language, t } = useLanguage();
+  const spanishColorLabels: Record<HexColorTarget, string> = {
+    bg: 'Fondo',
+    text: 'Texto',
+    border: 'Borde',
+    ring: 'Contorno',
+  };
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {hexColorControls.map((control) => {
@@ -458,7 +479,7 @@ function HexColorControls({
           >
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                {control.label}
+                {language === 'es' ? spanishColorLabels[control.target] : control.label}
               </span>
               <button
                 type="button"
@@ -467,7 +488,7 @@ function HexColorControls({
                 }
                 className="text-xs font-semibold text-zinc-500 transition hover:text-cyan-700 dark:text-zinc-400 dark:hover:text-cyan-200"
               >
-                Clear
+                {t('editorClear')}
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -541,6 +562,15 @@ function EditorSection({
   );
 }
 
+function formatTechnicalLabel(value: string) {
+  const label = value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 function StyleOptionSelector({
   options,
   value,
@@ -550,6 +580,7 @@ function StyleOptionSelector({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { language, t } = useLanguage();
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     {},
   );
@@ -596,11 +627,15 @@ function StyleOptionSelector({
               }
               aria-expanded={isOpen}
             >
-              <span>{styleOptionCategoryLabels[category] ?? category}</span>
+              <span>
+                {language === 'en'
+                  ? formatTechnicalLabel(category)
+                  : styleOptionCategoryLabels[category] ?? category}
+              </span>
               <span className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 {selectedCount > 0
-                  ? `${selectedCount} ${selectedCount === 1 ? 'activo' : 'activos'}`
-                  : 'Contraido'}
+                  ? t('editorSelected', { count: selectedCount })
+                  : t('editorCollapsed')}
                 <span
                   className={`text-base leading-none transition ${
                     isOpen ? 'rotate-90' : ''
@@ -615,7 +650,9 @@ function StyleOptionSelector({
                 {groups.map(([group, groupOptions]) => (
                   <fieldset key={group}>
                     <legend className="mb-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                      {styleOptionGroupLabels[group] ?? group}
+                      {language === 'en'
+                        ? formatTechnicalLabel(group)
+                        : styleOptionGroupLabels[group] ?? group}
                     </legend>
                     <div className="flex flex-wrap gap-2">
                       {groupOptions.map((option) => {
@@ -636,7 +673,9 @@ function StyleOptionSelector({
                                 : 'border-zinc-200 bg-white text-zinc-600 hover:border-cyan-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300'
                             }`}
                           >
-                            {option.label}
+                            {language === 'en'
+                              ? formatTechnicalLabel(option.id.replace(/^(card|block)-/, ''))
+                              : option.label}
                           </button>
                         );
                       })}
@@ -661,6 +700,7 @@ function EditorActions({
   label: string;
   isSaving: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="flex gap-2 pt-4">
       <button
@@ -669,7 +709,7 @@ function EditorActions({
         className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-500"
       >
         <CheckIcon className="h-4 w-4" aria-hidden="true" />
-        {isSaving ? 'Guardando...' : label}
+        {isSaving ? t('actionSaving') : label}
       </button>
       <button
         type="button"
@@ -677,7 +717,7 @@ function EditorActions({
         onClick={onCancel}
         className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 disabled:cursor-wait disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-200"
       >
-        Cancel
+        {t('actionCancel')}
       </button>
     </div>
   );
@@ -686,6 +726,7 @@ function EditorActions({
 export default function UserCardsEditorPanel({
   cards,
   displayCards,
+  // showCardNumber = false,
   isEditMode,
   isLoading,
   error,
@@ -697,6 +738,9 @@ export default function UserCardsEditorPanel({
   onDeleteBlock,
   onFeedback,
 }: UserCardsEditorPanelProps) {
+  const { language, t } = useLanguage();
+  const newCardTitle = language === 'es' ? 'Nueva tarjeta del portfolio' : 'New portfolio card';
+  const newBlockTitle = language === 'es' ? 'Nuevo bloque' : 'New block';
   const sortedCards = useMemo(
     () =>
       [...cards].sort(
@@ -707,10 +751,10 @@ export default function UserCardsEditorPanel({
   const [cardEditor, setCardEditor] = useState<CardEditor | null>(null);
   const [blockEditor, setBlockEditor] = useState<BlockEditor | null>(null);
   const [cardDraft, setCardDraft] = useState<CardDraft>(() =>
-    createEmptyCardDraft([]),
+    createEmptyCardDraft([], newCardTitle),
   );
   const [blockDraft, setBlockDraft] = useState<BlockDraft>(() =>
-    createEmptyBlockDraft([]),
+    createEmptyBlockDraft([], newBlockTitle),
   );
   const [statusMessage, setStatusMessage] = useState('');
   const [mutationError, setMutationError] = useState('');
@@ -771,7 +815,7 @@ export default function UserCardsEditorPanel({
   const openCreateCard = () => {
     setCardEditor({ mode: 'create' });
     setBlockEditor(null);
-    setCardDraft(createEmptyCardDraft(sortedCards));
+    setCardDraft(createEmptyCardDraft(sortedCards, newCardTitle));
     setStatusMessage('');
     setMutationError('');
   };
@@ -788,7 +832,7 @@ export default function UserCardsEditorPanel({
 
   const closeCardEditor = () => {
     setCardEditor(null);
-    setCardDraft(createEmptyCardDraft(sortedCards));
+    setCardDraft(createEmptyCardDraft(sortedCards, newCardTitle));
     setMutationError('');
   };
 
@@ -797,7 +841,7 @@ export default function UserCardsEditorPanel({
 
     setCardEditor(null);
     setBlockEditor({ mode: 'create', cardId: sourceCard.id });
-    setBlockDraft(createEmptyBlockDraft(sourceCard.blocks));
+    setBlockDraft(createEmptyBlockDraft(sourceCard.blocks, newBlockTitle));
     setStatusMessage('');
     setMutationError('');
   };
@@ -824,7 +868,7 @@ export default function UserCardsEditorPanel({
 
   const closeBlockEditor = () => {
     setBlockEditor(null);
-    setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
+    setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? [], newBlockTitle));
     setMutationError('');
   };
 
@@ -844,17 +888,17 @@ export default function UserCardsEditorPanel({
         cardEditor.mode === 'create'
           ? await onCreateCard(payload)
           : await onUpdateCard(cardEditor.cardId, payload);
-      const message = `Card "${savedCard.title}" guardada.`;
+      const message = t('itemSaved', { name: savedCard.title });
 
       setCardEditor(null);
-      setCardDraft(createEmptyCardDraft(sortedCards));
+      setCardDraft(createEmptyCardDraft(sortedCards, newCardTitle));
       setStatusMessage(message);
       onFeedback?.(message, 'success');
     } catch (unknownError) {
       const message =
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar la card.';
+          : t('cardSaveError');
 
       setMutationError(message);
       onFeedback?.(message, 'error');
@@ -864,7 +908,7 @@ export default function UserCardsEditorPanel({
   };
 
   const handleDeleteCard = async (card: UserCardDto) => {
-    if (!window.confirm(`Delete "${card.title}" and all its blocks?`)) {
+    if (!window.confirm(t('cardDeleteConfirm', { name: card.title }))) {
       return;
     }
 
@@ -878,7 +922,7 @@ export default function UserCardsEditorPanel({
       closeBlockEditor();
     }
 
-    setStatusMessage(`Card "${card.title}" deleted.`);
+    setStatusMessage(t('itemDeleted', { name: card.title }));
   };
 
   const handleSaveBlock = async (event: FormEvent<HTMLFormElement>) => {
@@ -905,15 +949,15 @@ export default function UserCardsEditorPanel({
       }
 
       setBlockEditor(null);
-      setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? []));
-      const message = 'Block guardado correctamente.';
+      setBlockDraft(createEmptyBlockDraft(blockEditorCard?.blocks ?? [], newBlockTitle));
+      const message = t('blockSaveSuccess');
       setStatusMessage(message);
       onFeedback?.(message, 'success');
     } catch (unknownError) {
       const message =
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el block.';
+          : t('blockSaveError');
       setMutationError(message);
       onFeedback?.(message, 'error');
     } finally {
@@ -936,7 +980,7 @@ export default function UserCardsEditorPanel({
       closeBlockEditor();
     }
 
-    setStatusMessage(`Block "${block.title ?? block.type}" deleted.`);
+    setStatusMessage(t('itemDeleted', { name: block.title ?? block.type }));
   };
 
   const renderCardEditor = (): ReactNode => {
@@ -957,7 +1001,7 @@ export default function UserCardsEditorPanel({
         />
         <EditorActions
           onCancel={closeCardEditor}
-          label="Guardar card"
+          label={t('actionSave')}
           isSaving={isSaving}
         />
       </form>
@@ -982,7 +1026,7 @@ export default function UserCardsEditorPanel({
         />
         <EditorActions
           onCancel={closeBlockEditor}
-          label="Guardar block"
+          label={t('actionSave')}
           isSaving={isSaving}
         />
       </form>
@@ -993,19 +1037,19 @@ export default function UserCardsEditorPanel({
   const floatingEditorTitle =
     cardEditor !== null
       ? cardEditor.mode === 'create'
-        ? 'Create UserCard'
-        : 'Edit UserCard'
+        ? t('cardCreate')
+        : t('cardEdit')
       : blockEditor?.mode === 'create'
-        ? 'Create UserCardBlock'
+        ? t('blockCreate')
         : blockEditor?.mode === 'edit'
-          ? 'Edit UserCardBlock'
+          ? t('blockEdit')
           : '';
   const floatingEditorDescription =
     cardEditor !== null
-      ? 'Drag this editor anywhere. The portfolio preview updates live.'
+      ? t('cardEditorDrag')
       : blockEditorCard
-        ? `Editing inside ${blockEditorCard.title}. Drag this editor away from the preview.`
-        : 'Drag this editor anywhere. The portfolio preview updates live.';
+        ? t('blockEditorDrag', { name: blockEditorCard.title })
+        : t('cardEditorDrag');
   const floatingEditorContent =
     cardEditor !== null
       ? renderCardEditor()
@@ -1022,7 +1066,13 @@ export default function UserCardsEditorPanel({
     cardEditor !== null ? closeCardEditor : closeBlockEditor;
 
   if (!isEditMode) {
-    return <UserCardsSection cards={displayCards} />;
+    return (
+      <UserCardsSection
+        cards={displayCards}
+        // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+        // showCardNumber={showCardNumber}
+      />
+    );
   }
 
   return (
@@ -1032,10 +1082,10 @@ export default function UserCardsEditorPanel({
           <div className="flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                Portfolio manager
+                {t('cardsManager')}
               </p>
               <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-                Cards and blocks
+                {t('cardsAndBlocks')}
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -1045,15 +1095,17 @@ export default function UserCardsEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 dark:bg-white dark:text-zinc-950 dark:hover:bg-cyan-100"
               >
                 <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                Create card
+                {t('cardCreate')}
               </button>
             </div>
           </div>
 
           {isLoading && (
-            <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-              Loading portfolio data...
-            </p>
+            <LoadingState
+              className="mt-4"
+              label={t('loadingContent')}
+              variant="compact"
+            />
           )}
 
           {error && (
@@ -1086,7 +1138,8 @@ export default function UserCardsEditorPanel({
               >
                 <UserCard
                   card={cardPreview}
-                  showCardNumber
+                  // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+                  // showCardNumber
                   showBlockMetadata
                 />
               </div>
@@ -1128,16 +1181,18 @@ function CardFields({
   sortOrderMax: number;
   onChange: React.Dispatch<React.SetStateAction<CardDraft>>;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-4">
       <EditorSection
-        title="Card content"
-        description="Base data, template, width and order."
+        title={t('cardContent')}
+        description={t('cardContentDescription')}
         icon={Squares2X2Icon}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <label>
-            <span className={labelClass}>Title</span>
+            <span className={labelClass}>{t('editorTitle')}</span>
             <input
               value={draft.title}
               onChange={(event) =>
@@ -1151,7 +1206,7 @@ function CardFields({
           </label>
           <TemplateSelect
             id="card-template"
-            label="Card template"
+            label={t('cardTemplate')}
             options={cardTemplateOptions}
             value={draft.template ?? 'default'}
             onChange={(template) =>
@@ -1159,7 +1214,7 @@ function CardFields({
             }
           />
           <WidthControl
-            label="Width (%)"
+            label={t('editorWidth')}
             value={draft.width}
             onChange={(width) =>
               onChange((currentDraft) => ({ ...currentDraft, width }))
@@ -1173,7 +1228,7 @@ function CardFields({
             }
           />
           <label className="md:col-span-2">
-            <span className={labelClass}>Description</span>
+            <span className={labelClass}>{t('editorDescription')}</span>
             <textarea
               value={draft.description ?? ''}
               onChange={(event) =>
@@ -1190,8 +1245,8 @@ function CardFields({
       </EditorSection>
 
       <EditorSection
-        title="Card styles"
-        description="Pick hex colors and combine them with clickable style presets."
+        title={t('cardStyles')}
+        description={t('cardStylesDescription')}
         icon={SwatchIcon}
       >
         <div className="space-y-4">
@@ -1212,8 +1267,8 @@ function CardFields({
       </EditorSection>
 
       <EditorSection
-        title="Advanced styleText"
-        description="Manual Tailwind classes for custom API-driven styling."
+        title={t('advancedStyles')}
+        description={t('advancedStylesDescription')}
         icon={AdjustmentsHorizontalIcon}
       >
         <label className="block">
@@ -1244,16 +1299,18 @@ function BlockFields({
   sortOrderMax: number;
   onChange: React.Dispatch<React.SetStateAction<BlockDraft>>;
 }) {
+  const { language, t } = useLanguage();
+
   return (
     <div className="space-y-4">
       <EditorSection
-        title="Block structure"
-        description="Type, template, icon, width and order."
+        title={t('blockStructure')}
+        description={t('blockStructureDescription')}
         icon={Squares2X2Icon}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <label>
-            <span className={labelClass}>Type</span>
+            <span className={labelClass}>{t('editorType')}</span>
             <select
               value={draft.type}
               onChange={(event) =>
@@ -1264,17 +1321,17 @@ function BlockFields({
               }
               className={fieldClass}
             >
-              <option value="text">Text</option>
+              <option value="text">{language === 'es' ? 'Texto' : 'Text'}</option>
               <option value="media">Media</option>
-              <option value="image">Image</option>
+              <option value="image">{language === 'es' ? 'Imagen' : 'Image'}</option>
               <option value="video">Video</option>
-              <option value="list">List</option>
-              <option value="quote">Quote</option>
+              <option value="list">{language === 'es' ? 'Lista' : 'List'}</option>
+              <option value="quote">{language === 'es' ? 'Cita' : 'Quote'}</option>
             </select>
           </label>
           <TemplateSelect
             id="block-template"
-            label="Block template"
+            label={t('blockTemplate')}
             options={blockTemplateOptions}
             value={draft.template ?? 'default'}
             onChange={(template) =>
@@ -1288,7 +1345,7 @@ function BlockFields({
             }
           />
           <WidthControl
-            label="Width (%)"
+            label={t('editorWidth')}
             value={draft.width}
             onChange={(width) =>
               onChange((currentDraft) => ({ ...currentDraft, width }))
@@ -1305,13 +1362,13 @@ function BlockFields({
       </EditorSection>
 
       <EditorSection
-        title="Block content"
-        description="Text, media URL and optional caption."
+        title={t('blockContent')}
+        description={t('blockContentDescription')}
         icon={DocumentTextIcon}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <label>
-            <span className={labelClass}>Title</span>
+            <span className={labelClass}>{t('editorTitle')}</span>
             <input
               value={draft.title ?? ''}
               onChange={(event) =>
@@ -1324,7 +1381,7 @@ function BlockFields({
             />
           </label>
           <label>
-            <span className={labelClass}>Media URL</span>
+            <span className={labelClass}>{t('editorMediaUrl')}</span>
             <input
               value={draft.mediaUrl ?? ''}
               onChange={(event) =>
@@ -1337,7 +1394,7 @@ function BlockFields({
             />
           </label>
           <label className="md:col-span-2">
-            <span className={labelClass}>Content</span>
+            <span className={labelClass}>{t('editorContent')}</span>
             <textarea
               value={draft.content ?? ''}
               onChange={(event) =>
@@ -1351,7 +1408,7 @@ function BlockFields({
             />
           </label>
           <label className="md:col-span-2">
-            <span className={labelClass}>Caption</span>
+            <span className={labelClass}>{t('editorCaption')}</span>
             <input
               value={draft.caption ?? ''}
               onChange={(event) =>
@@ -1367,8 +1424,8 @@ function BlockFields({
       </EditorSection>
 
       <EditorSection
-        title="Block styles"
-        description="Pick hex colors, text styles, alignment, background, opacity and accents."
+        title={t('blockStyles')}
+        description={t('blockStylesDescription')}
         icon={PaintBrushIcon}
       >
         <div className="space-y-4">
@@ -1389,8 +1446,8 @@ function BlockFields({
       </EditorSection>
 
       <EditorSection
-        title="Advanced styleText"
-        description="Manual Tailwind classes for custom API-driven styling."
+        title={t('advancedStyles')}
+        description={t('advancedStylesDescription')}
         icon={AdjustmentsHorizontalIcon}
       >
         <label className="block">

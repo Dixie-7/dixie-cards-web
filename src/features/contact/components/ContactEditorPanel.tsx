@@ -8,6 +8,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, type FormEvent } from 'react';
 import type { UserContactDto, UserContactPayload } from '@/features/contact/types/contact.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
+import type { TranslationKey } from '@/shared/i18n/translations';
 
 interface ContactEditorPanelProps {
   contact: UserContactDto | null;
@@ -44,42 +47,43 @@ const emptyContactDraft: ContactDraft = {
 
 const contactFields: Array<{
   key: ContactFieldKey;
-  label: string;
+  labelKey?: TranslationKey;
+  label?: string;
   type: string;
   maxLength: number;
   placeholder: string;
 }> = [
   {
     key: 'publicEmail',
-    label: 'PublicEmail',
+    labelKey: 'contactPublicEmail',
     type: 'email',
     maxLength: 100,
     placeholder: 'portfolio@dixiecards.dev',
   },
   {
     key: 'altEmail',
-    label: 'AltEmail',
+    labelKey: 'contactAlternateEmail',
     type: 'email',
     maxLength: 100,
     placeholder: 'contacto@dixiecards.dev',
   },
   {
     key: 'phone',
-    label: 'Phone',
+    labelKey: 'contactPhone',
     type: 'tel',
     maxLength: 30,
     placeholder: '+54 9 11 5555-0101',
   },
   {
     key: 'altPhone',
-    label: 'AltPhone',
+    labelKey: 'contactAlternatePhone',
     type: 'tel',
     maxLength: 30,
     placeholder: '+54 9 11 5555-0102',
   },
   {
     key: 'site',
-    label: 'Site',
+    labelKey: 'contactWebsite',
     type: 'url',
     maxLength: 200,
     placeholder: 'https://portfolio.dev',
@@ -151,6 +155,7 @@ function hasAnyContactValue(payload: UserContactPayload) {
 }
 
 function ContactSummary({ contact }: { contact: UserContactDto }) {
+  const { t } = useLanguage();
   const summaryItems = contactFields
     .map((field) => ({
       ...field,
@@ -166,7 +171,7 @@ function ContactSummary({ contact }: { contact: UserContactDto }) {
           className="rounded-lg border border-zinc-200 bg-white p-3 text-left dark:border-zinc-800 dark:bg-zinc-950"
         >
           <dt className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-            {item.label}
+            {item.labelKey ? t(item.labelKey) : item.label}
           </dt>
           <dd className="mt-1 break-words text-sm font-medium text-zinc-950 dark:text-white">
             {item.value}
@@ -186,6 +191,7 @@ export default function ContactEditorPanel({
   onUpdateContact,
   onDeleteContact,
 }: ContactEditorPanelProps) {
+  const { t } = useLanguage();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [draft, setDraft] = useState<ContactDraft>(() =>
     createContactDraft(contact),
@@ -213,7 +219,7 @@ export default function ContactEditorPanel({
     const payload = getContactPayload(draft);
 
     if (!hasAnyContactValue(payload)) {
-      setMutationError('Carga al menos un dato de contacto.');
+      setMutationError(t('contactRequired'));
       return;
     }
 
@@ -225,13 +231,13 @@ export default function ContactEditorPanel({
         ? onUpdateContact(contact.id, payload)
         : onCreateContact(payload));
 
-      setStatusMessage('Contacto guardado.');
+      setStatusMessage(t('contactSaved'));
       setIsEditorOpen(false);
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el contacto.',
+          : t('contactSaveError'),
       );
     } finally {
       setIsSaving(false);
@@ -239,7 +245,7 @@ export default function ContactEditorPanel({
   };
 
   const handleDeleteContact = async () => {
-    if (!contact || !window.confirm('Eliminar los datos de contacto?')) {
+    if (!contact || !window.confirm(t('contactDeleteConfirm'))) {
       return;
     }
 
@@ -248,14 +254,14 @@ export default function ContactEditorPanel({
 
     try {
       await onDeleteContact(contact.id);
-      setStatusMessage('Contacto eliminado.');
+      setStatusMessage(t('contactDeleted'));
       setIsEditorOpen(false);
       setDraft(createContactDraft(null));
     } catch (unknownError) {
       setMutationError(
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo eliminar el contacto.',
+          : t('contactDeleteError'),
       );
     } finally {
       setIsSaving(false);
@@ -268,13 +274,13 @@ export default function ContactEditorPanel({
         <div className="flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-              Contact manager
+              {t('contactManager')}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-              UserContact
+              {t('contactTitle')}
             </h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              User #{contact?.userId ?? currentUserId}
+              {t('contactUser')} #{contact?.userId ?? currentUserId}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 md:self-end">
@@ -288,7 +294,7 @@ export default function ContactEditorPanel({
               ) : (
                 <PlusIcon className="h-4 w-4" aria-hidden="true" />
               )}
-              {contact ? 'Editar contacto' : 'Crear contacto'}
+              {contact ? t('contactEdit') : t('contactCreate')}
             </button>
             {contact && (
               <button
@@ -298,16 +304,18 @@ export default function ContactEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait dark:border-red-400/20 dark:text-red-200 dark:hover:bg-red-400/10"
               >
                 <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                Eliminar
+                {t('actionDelete')}
               </button>
             )}
           </div>
         </div>
 
         {isLoading && (
-          <p className="mt-4 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando contacto...
-          </p>
+          <LoadingState
+            className="mt-4"
+            label={t('loadingContent')}
+            variant="compact"
+          />
         )}
 
         {error && (
@@ -336,7 +344,7 @@ export default function ContactEditorPanel({
               className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-300"
               aria-hidden="true"
             />
-            Todavia no hay datos de contacto cargados.
+            {t('contactEditorEmpty')}
           </div>
         )}
 
@@ -348,18 +356,18 @@ export default function ContactEditorPanel({
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-zinc-950 dark:text-white">
-                  {contact ? 'Editar UserContact' : 'Crear UserContact'}
+                  {contact ? t('contactEdit') : t('contactCreate')}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  DTO CreateUserContactDto / UpdateUserContactDto
+                  {t('contactEditorDescription')}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-300"
-                aria-label="Cerrar editor"
-                title="Cerrar"
+                aria-label={t('editorClose')}
+                title={t('actionClose')}
               >
                 <XMarkIcon className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -371,12 +379,18 @@ export default function ContactEditorPanel({
                   key={field.key}
                   className={field.key === 'site' ? 'md:col-span-2' : ''}
                 >
-                  <span className={labelClass}>{field.label}</span>
+                  <span className={labelClass}>
+                    {field.labelKey ? t(field.labelKey) : field.label}
+                  </span>
                   <input
                     type={field.type}
                     value={draft[field.key]}
                     maxLength={field.maxLength}
-                    placeholder={field.placeholder}
+                    placeholder={
+                      ['instagram', 'gitHub', 'facebook', 'linkedIn'].includes(field.key)
+                        ? t('contactHandlePlaceholder')
+                        : field.placeholder
+                    }
                     onChange={(event) =>
                       setDraft((currentDraft) => ({
                         ...currentDraft,
@@ -396,14 +410,14 @@ export default function ContactEditorPanel({
                 className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-600"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isSaving ? 'Guardando...' : 'Guardar'}
+                {isSaving ? t('actionSaving') : t('actionSave')}
               </button>
               <button
                 type="button"
                 onClick={closeEditor}
                 className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-cyan-300 dark:border-zinc-800 dark:text-zinc-200"
               >
-                Cancelar
+                {t('actionCancel')}
               </button>
             </div>
           </form>

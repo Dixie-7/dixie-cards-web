@@ -2,6 +2,8 @@ import { LanguageIcon } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import type { UserLanguageDto } from '@/features/languages/types/language.types';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 import { getLanguageAccentColor, getSafePercent } from './languageUi';
 
 type LanguageViewModel = Omit<UserLanguageDto, 'level' | 'skillPercent'> & {
@@ -24,6 +26,7 @@ export default function LanguagesSection({
   showPercent = true,
   showLevel = true,
 }: LanguagesSectionProps) {
+  const { t, language: interfaceLanguage } = useLanguage();
   const sortedLanguages = useMemo(
     () =>
       [...languages].sort(
@@ -44,17 +47,15 @@ export default function LanguagesSection({
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 text-left">
           <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">
-            Lenguajes
+            {t('languagesTitle')}
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            Idiomas y comunicacion
+            {t('languagesSubtitle')}
           </h2>
         </div>
 
         {isLoading && (
-          <p className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-            Cargando lenguajes...
-          </p>
+          <LoadingState label={t('loadingContent')} />
         )}
 
         {!isLoading && error && (
@@ -65,7 +66,7 @@ export default function LanguagesSection({
 
         {!isLoading && !error && sortedLanguages.length === 0 && (
           <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-left text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            Este portfolio todavia no tiene lenguajes publicados.
+            {t('languagesEmpty')}
           </div>
         )}
 
@@ -125,7 +126,7 @@ export default function LanguagesSection({
                       {shouldShowPercent && (
                         <div>
                           <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                            <span>Dominio</span>
+                            <span>{interfaceLanguage === 'es' ? 'Dominio' : 'Proficiency'}</span>
                             <span>{safePercent}%</span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">

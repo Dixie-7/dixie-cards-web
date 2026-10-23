@@ -4,6 +4,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
+import { useLanguage } from '@/shared/i18n/useLanguage';
 
 export type StatusToastKind = 'success' | 'error';
 
@@ -22,6 +23,7 @@ export default function StatusToast({
   notification,
   onDismiss,
 }: StatusToastProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (!notification) {
       return;
@@ -57,8 +59,8 @@ export default function StatusToast({
         type="button"
         onClick={onDismiss}
         className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-current opacity-70 transition hover:opacity-100"
-        aria-label="Cerrar notificacion"
-        title="Cerrar"
+        aria-label={t('actionClose')}
+        title={t('actionClose')}
       >
         <XMarkIcon className="h-4 w-4" aria-hidden="true" />
       </button>

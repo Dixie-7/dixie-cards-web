@@ -9,20 +9,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState, type RefObject } from 'react';
+import { useLanguage } from '@/shared/i18n/useLanguage';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export interface FloatingNavbarItem {
   label: string;
   href: string;
 }
-
-const defaultNavigationItems: FloatingNavbarItem[] = [
-  { label: 'Home', href: '#home' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'DCards', href: '#dcards' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Language', href: '#language' },
-  { label: 'Contact', href: '#contact' },
-];
 
 interface FloatingNavbarProps {
   brandHref?: string;
@@ -49,7 +42,7 @@ export default function FloatingNavbar({
   isAuthenticated,
   isEditMode,
   authenticatedPrimaryLabel,
-  navigationItems = defaultNavigationItems,
+  navigationItems,
   ownerLabel,
   showAuthActions = true,
   userLabel,
@@ -61,8 +54,17 @@ export default function FloatingNavbar({
   onToggleEditMode,
   onLogout,
 }: FloatingNavbarProps) {
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const displayOwner = ownerLabel ?? userLabel;
+  const resolvedNavigationItems = navigationItems ?? [
+    { label: t('navHome'), href: '#home' },
+    { label: t('navProjects'), href: '#projects' },
+    { label: t('navCards'), href: '#dcards' },
+    { label: t('navSkills'), href: '#skills' },
+    { label: t('navLanguages'), href: '#language' },
+    { label: t('navContact'), href: '#contact' },
+  ];
 
   const closeMenu = () => setIsMenuOpen(false);
   const handleLogin = () => {
@@ -89,7 +91,7 @@ export default function FloatingNavbar({
   return (
     <header className="floating-navbar">
       <div className="floating-navbar__inner">
-        <a className="floating-navbar__brand" href={brandHref} aria-label="Dixie Cards Home">
+        <a className="floating-navbar__brand" href={brandHref} aria-label={`Dixie Cards ${t('navHome')}`}>
           <span className="floating-navbar__brand-mark" aria-hidden="true">
             <span>D</span>
             <span>C</span>
@@ -100,9 +102,9 @@ export default function FloatingNavbar({
           </span>
         </a>
 
-        {navigationItems.length > 0 && (
-          <nav className="floating-navbar__nav" aria-label="Portfolio navigation">
-            {navigationItems.map((item) => (
+        {resolvedNavigationItems.length > 0 && (
+          <nav className="floating-navbar__nav" aria-label={t('navPortfolioLabel')}>
+            {resolvedNavigationItems.map((item) => (
               <a key={`${item.label}-${item.href}`} href={item.href}>
                 {item.label}
               </a>
@@ -111,6 +113,8 @@ export default function FloatingNavbar({
         )}
 
         <div className="floating-navbar__actions">
+          <LanguageSwitcher />
+
           {displayOwner && (
             <span className="floating-navbar__owner" title={displayOwner}>
               <UserCircleIcon className="floating-navbar__icon" aria-hidden="true" />
@@ -137,12 +141,12 @@ export default function FloatingNavbar({
                   }`}
                   onClick={handleToggleEditMode}
                   aria-pressed={isEditMode}
-                  aria-label={isEditMode ? 'Salir del modo edicion' : 'Activar modo edicion'}
-                  title={isEditMode ? 'Exit edit mode' : 'Edit mode'}
+                  aria-label={isEditMode ? t('navExitEdit') : t('navEdit')}
+                  title={isEditMode ? t('navExitEdit') : t('navEdit')}
                 >
                   <PencilSquareIcon className="floating-navbar__icon" aria-hidden="true" />
                   <span className="floating-navbar__button-label">
-                    {isEditMode ? 'Editing' : 'Edit'}
+                    {isEditMode ? t('navEditing') : t('navEdit')}
                   </span>
                 </button>
 
@@ -151,22 +155,22 @@ export default function FloatingNavbar({
                   type="button"
                   className="floating-navbar__action-button"
                   onClick={handleOpenConfig}
-                  aria-label="Abrir configuracion de usuario"
-                  title="Settings"
+                  aria-label={t('navSettings')}
+                  title={t('navSettings')}
                 >
                   <Cog6ToothIcon className="floating-navbar__icon" aria-hidden="true" />
-                  <span className="floating-navbar__button-label">Settings</span>
+                  <span className="floating-navbar__button-label">{t('navSettings')}</span>
                 </button>
 
                 <button
                   type="button"
                   className="floating-navbar__action-button"
                   onClick={handleLogout}
-                  aria-label="Cerrar sesion"
-                  title="Salir"
+                  aria-label={t('navLogout')}
+                  title={t('navLogout')}
                 >
                   <ArrowLeftOnRectangleIcon className="floating-navbar__icon" aria-hidden="true" />
-                  <span className="floating-navbar__button-label">Salir</span>
+                  <span className="floating-navbar__button-label">{t('navLogout')}</span>
                 </button>
               </>
             ) : (
@@ -177,7 +181,7 @@ export default function FloatingNavbar({
                 onClick={handleLogin}
               >
                 <ArrowRightOnRectangleIcon className="floating-navbar__icon" aria-hidden="true" />
-                Login / Registrarse
+                {t('navLogin')}
               </button>
             )
           )}
@@ -187,7 +191,7 @@ export default function FloatingNavbar({
             className="floating-navbar__menu-button"
             onClick={() => setIsMenuOpen((current) => !current)}
             aria-expanded={isMenuOpen}
-            aria-label={isMenuOpen ? 'Cerrar navegacion' : 'Abrir navegacion'}
+            aria-label={isMenuOpen ? t('navClose') : t('navOpen')}
           >
             {isMenuOpen ? <XMarkIcon /> : <Bars3Icon />}
           </button>
@@ -203,11 +207,11 @@ export default function FloatingNavbar({
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22 }}
           >
-            <nav className="floating-navbar__mobile-menu-inner" aria-label="Mobile portfolio navigation">
+            <nav className="floating-navbar__mobile-menu-inner" aria-label={t('navMobileLabel')}>
               {displayOwner && (
                 <span className="floating-navbar__mobile-owner">{displayOwner}</span>
               )}
-              {navigationItems.map((item) => (
+              {resolvedNavigationItems.map((item) => (
                 <a key={`${item.label}-${item.href}-mobile`} href={item.href} onClick={closeMenu}>
                   {item.label}
                 </a>
@@ -220,18 +224,18 @@ export default function FloatingNavbar({
                 ) : isAuthenticated ? (
                   <>
                     <button type="button" onClick={handleToggleEditMode}>
-                      {isEditMode ? 'Exit edit mode' : 'Edit mode'}
+                      {isEditMode ? t('navExitEdit') : t('navEdit')}
                     </button>
                     <button type="button" onClick={handleOpenConfig}>
-                      Settings
+                      {t('navSettings')}
                     </button>
                     <button type="button" onClick={handleLogout}>
-                      Salir
+                      {t('navLogout')}
                     </button>
                   </>
                 ) : (
                   <button type="button" onClick={handleLogin}>
-                    Login / Registrarse
+                    {t('navLogin')}
                   </button>
                 )
               )}

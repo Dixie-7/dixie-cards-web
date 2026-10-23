@@ -13,6 +13,9 @@ import {
 } from 'react';
 import BaseModal from '@/shared/components/Modal/BaseModal';
 import type { StatusToastKind } from '@/shared/components/StatusToast';
+import LoadingState from '@/shared/components/LoadingState';
+import { useLanguage } from '@/shared/i18n/useLanguage';
+import type { TranslationKey } from '@/shared/i18n/translations';
 import ParticlesConfigModal from '@/features/user-config/components/ParticlesConfigModal';
 import {
   defaultUserConfigPayload,
@@ -39,47 +42,49 @@ type ConfigFieldKey = Exclude<
 >;
 
 const configGroups: Array<{
-  title: string;
-  description: string;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
   fields: Array<{
     key: ConfigFieldKey;
-    label: string;
+    labelKey?: TranslationKey;
+    label?: string;
   }>;
 }> = [
   {
-    title: 'Secciones publicas',
-    description: 'Controla que bloques grandes aparecen en el portfolio.',
+    titleKey: 'configPublicSections',
+    descriptionKey: 'configPublicSectionsDescription',
     fields: [
-      { key: 'showProjectsSection', label: 'Proyectos' },
-      { key: 'showCardsSection', label: 'Cards' },
-      { key: 'showCardNumber', label: 'Mostrar numero de las Cards' },
-      { key: 'showContactSection', label: 'Contacto' },
-      { key: 'showSkillsSection', label: 'Skills' },
-      { key: 'showLanguagesSection', label: 'Idiomas' },
+      { key: 'showProjectsSection', labelKey: 'navProjects' },
+      { key: 'showCardsSection', labelKey: 'navCards' },
+      // TODO(showCardNumber): Uncomment when card numbering is enabled again.
+      // { key: 'showCardNumber', labelKey: 'configCardsNumber' },
+      { key: 'showContactSection', labelKey: 'navContact' },
+      { key: 'showSkillsSection', labelKey: 'navSkills' },
+      { key: 'showLanguagesSection', labelKey: 'navLanguages' },
       { key: 'showCv', label: 'CV' },
     ],
   },
   {
-    title: 'Datos de contacto',
-    description: 'Elige que medios de contacto se publican.',
+    titleKey: 'configContactDetails',
+    descriptionKey: 'configContactDetailsDescription',
     fields: [
-      { key: 'showEmail', label: 'Email publico' },
-      { key: 'showAltEmail', label: 'Email alternativo' },
-      { key: 'showPhone', label: 'Telefono' },
-      { key: 'showAltPhone', label: 'Telefono alternativo' },
+      { key: 'showEmail', labelKey: 'contactPublicEmail' },
+      { key: 'showAltEmail', labelKey: 'contactAlternateEmail' },
+      { key: 'showPhone', labelKey: 'contactPhone' },
+      { key: 'showAltPhone', labelKey: 'contactAlternatePhone' },
       { key: 'showInstagram', label: 'Instagram' },
       { key: 'showGitHub', label: 'GitHub' },
       { key: 'showFacebook', label: 'Facebook' },
       { key: 'showLinkedIn', label: 'LinkedIn' },
-      { key: 'showWebsite', label: 'Website' },
+      { key: 'showWebsite', labelKey: 'contactWebsite' },
     ],
   },
   {
-    title: 'Idiomas',
-    description: 'Preferencias para la futura seccion de idiomas.',
+    titleKey: 'navLanguages',
+    descriptionKey: 'configLanguageDetailsDescription',
     fields: [
-      { key: 'showLanguagePercent', label: 'Mostrar porcentaje' },
-      { key: 'showLanguageLevel', label: 'Mostrar nivel' },
+      { key: 'showLanguagePercent', labelKey: 'configLanguagePercent' },
+      { key: 'showLanguageLevel', labelKey: 'configLanguageLevel' },
     ],
   },
 ];
@@ -142,6 +147,7 @@ export default function UserConfigModal({
   onFeedback,
   restoreFocusRef,
 }: UserConfigModalProps) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState<UserConfigPayload>(() =>
     getPayloadFromConfig(config),
   );
@@ -171,12 +177,12 @@ export default function UserConfigModal({
         songUrl: draft.songUrl?.trim() || null,
       });
       onClose();
-      onFeedback?.('Configuracion guardada correctamente.', 'success');
+      onFeedback?.(t('configSaved'), 'success');
     } catch (unknownError) {
       const message =
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar la configuracion.';
+          : t('configSaveError');
       setMutationError(message);
       onFeedback?.(message, 'error');
     } finally {
@@ -194,12 +200,12 @@ export default function UserConfigModal({
         particles,
       });
       setDraft(getPayloadFromConfig(updatedConfig));
-      onFeedback?.('Fondo del portfolio guardado.', 'success');
+      onFeedback?.(t('configBackgroundSaved'), 'success');
     } catch (unknownError) {
       const message =
         unknownError instanceof Error
           ? unknownError.message
-          : 'No se pudo guardar el fondo del portfolio.';
+          : t('configBackgroundSaveError');
       onFeedback?.(message, 'error');
       throw unknownError;
     }
@@ -210,21 +216,22 @@ export default function UserConfigModal({
       <BaseModal
         isOpen={isOpen && !isParticlesModalOpen}
         onClose={onClose}
-        title="Configuracion"
-        description="Visibilidad de secciones y datos publicos del portfolio."
+        title={t('configTitle')}
+        description={t('configDescription')}
         size="lg"
         restoreFocusRef={restoreFocusRef}
       >
         <form onSubmit={handleSaveConfig} className="space-y-5 text-left">
         <div className="flex items-center gap-3 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-sm text-cyan-100">
           <EyeIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-          User #{config.userId} / Config #{config.id || 'default'}
+          {t('contactUser')} #{config.userId} / {t('configTitle')} #{config.id || t('configDefault')}
         </div>
 
         {isLoading && (
-          <p className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-300">
-            Cargando configuracion...
-          </p>
+          <LoadingState
+            label={t('loadingContent')}
+            variant="compact"
+          />
         )}
 
         {error && (
@@ -247,12 +254,15 @@ export default function UserConfigModal({
               </span>
               <div>
                 <h3 className="text-sm font-semibold text-white">
-                  Fondo del portfolio
+                  {t('configPortfolioBackground')}
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-zinc-400">
                   {draft.particles?.enabled
-                    ? `${draft.particles.count} partículas · ${draft.particles.shape}`
-                    : 'Creá un fondo animado sutil y personalizado.'}
+                    ? t('configBackgroundActive', {
+                        count: draft.particles.count,
+                        shape: draft.particles.shape,
+                      })
+                    : t('configBackgroundEmpty')}
                 </p>
               </div>
             </div>
@@ -266,7 +276,7 @@ export default function UserConfigModal({
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-violet-400/35 bg-violet-400/10 px-3.5 py-2.5 text-sm font-semibold text-violet-100 transition hover:border-violet-300 hover:bg-violet-400/20"
             >
               <SparklesIcon className="h-4 w-4" aria-hidden="true" />
-              Personalizar fondo
+              {t('configCustomizeBackground')}
             </button>
           </div>
         </section>
@@ -279,10 +289,10 @@ export default function UserConfigModal({
             />
             <div>
               <h3 className="text-sm font-semibold text-white">
-                Musica del portfolio
+                {t('configPortfolioMusic')}
               </h3>
               <p className="mt-1 text-xs leading-5 text-zinc-400">
-                Configura la cancion que se mostrara en tu portfolio publico.
+                {t('configMusicDescription')}
               </p>
             </div>
           </div>
@@ -290,7 +300,7 @@ export default function UserConfigModal({
           <div className="space-y-3">
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold text-zinc-300">
-                URL de la cancion
+                {t('configSongUrl')}
               </span>
               <input
                 type="url"
@@ -311,7 +321,7 @@ export default function UserConfigModal({
             </label>
 
             <ConfigToggleField
-              label="Mostrar reproductor"
+              label={t('configShowPlayer')}
               checked={draft.showSong}
               onChange={(checked) =>
                 setDraft((currentDraft) => ({
@@ -325,22 +335,22 @@ export default function UserConfigModal({
 
         {configGroups.map((group) => (
           <section
-            key={group.title}
+            key={group.titleKey}
             className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4"
           >
             <div className="mb-3">
               <h3 className="text-sm font-semibold text-white">
-                {group.title}
+                {t(group.titleKey)}
               </h3>
               <p className="mt-1 text-xs leading-5 text-zinc-400">
-                {group.description}
+                {t(group.descriptionKey)}
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {group.fields.map((field) => (
                 <ConfigToggleField
                   key={field.key}
-                  label={field.label}
+                  label={field.labelKey ? t(field.labelKey) : field.label ?? ''}
                   checked={draft[field.key]}
                   onChange={(checked) =>
                     setDraft((currentDraft) => ({
@@ -361,14 +371,14 @@ export default function UserConfigModal({
             className="inline-flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-wait disabled:bg-zinc-600"
           >
             <CheckIcon className="h-4 w-4" aria-hidden="true" />
-            {isSaving ? 'Guardando...' : 'Guardar'}
+            {isSaving ? t('actionSaving') : t('actionSave')}
           </button>
           <button
             type="button"
             onClick={() => setDraft(defaultUserConfigPayload)}
             className="rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition hover:border-cyan-400 hover:text-cyan-100"
           >
-            Mostrar todo
+            {t('actionShowAll')}
           </button>
         </div>
         </form>

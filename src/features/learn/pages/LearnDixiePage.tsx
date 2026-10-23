@@ -9,10 +9,12 @@ import ReactPlayer from 'react-player';
 import { Link } from 'react-router-dom';
 import { landingParticlesConfig } from '@/features/landing/landingParticlesConfig';
 import ParticlesBackground from '@/shared/components/Background/ParticlesBackground';
-import { learnVideos, type LearnVideo } from '../learnVideos';
+import LanguageSwitcher from '@/shared/components/LanguageSwitcher';
+import { useLanguage } from '@/shared/i18n/useLanguage';
+import { englishLearnVideos, learnVideos, type LearnVideo } from '../learnVideos';
 import '../styles/learn.css';
 
-function VideoStage({ video }: { video: LearnVideo }) {
+function VideoStage({ video, isSpanish }: { video: LearnVideo; isSpanish: boolean }) {
   if (video.videoUrl) {
     return (
       <ReactPlayer
@@ -32,18 +34,24 @@ function VideoStage({ video }: { video: LearnVideo }) {
         <PlayIcon />
       </span>
       <div>
-        <strong>Video próximamente</strong>
-        <span>Este espacio ya está preparado para recibir la URL.</span>
+        <strong>{isSpanish ? 'Video proximamente' : 'Video coming soon'}</strong>
+        <span>
+          {isSpanish
+            ? 'Este espacio ya esta preparado para recibir la URL.'
+            : 'This space is ready for the video URL.'}
+        </span>
       </div>
     </div>
   );
 }
 
 function LearnDixiePage() {
+  const { language } = useLanguage();
+  const isSpanish = language === 'es';
+  const videos = isSpanish ? learnVideos : englishLearnVideos;
   useEffect(() => {
     const previousTitle = document.title;
     document.title = 'Learn Dixie Cards | Dixie Cards';
-    document.documentElement.lang = 'es';
     window.scrollTo({ top: 0, behavior: 'auto' });
 
     return () => {
@@ -61,28 +69,33 @@ function LearnDixiePage() {
 
       <div className="learn-page__content">
         <header className="learn-header learn-container">
-          <Link className="learn-brand" to="/" aria-label="Dixie Cards, inicio">
+          <Link className="learn-brand" to="/" aria-label={`Dixie Cards, ${isSpanish ? 'inicio' : 'home'}`}>
             <span>DC</span>
             <strong>DIXIE CARDS</strong>
           </Link>
-          <Link className="learn-back-link" to="/">
-            <ArrowLeftIcon /> Volver a la landing
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <Link className="learn-back-link" to="/">
+              <ArrowLeftIcon /> {isSpanish ? 'Volver a la landing' : 'Back to landing'}
+            </Link>
+          </div>
         </header>
 
         <section className="learn-hero learn-container">
           <div className="learn-hero__copy">
             <span className="learn-kicker">DIXIE / LEARN</span>
             <h1>
-              Entendé el producto. <span>Conocé la historia.</span>
+              {isSpanish ? 'Entende el producto. ' : 'Understand the product. '}
+              <span>{isSpanish ? 'Conoce la historia.' : 'Discover the story.'}</span>
             </h1>
             <p>
-              Dos videos para aprender a construir tu portfolio y descubrir qué hay
-              detrás de Dixie Cards.
+              {isSpanish
+                ? 'Dos videos para aprender a construir tu portfolio y descubrir que hay detras de Dixie Cards.'
+                : 'Two videos to learn how to build your portfolio and discover the story behind Dixie Cards.'}
             </p>
           </div>
-          <nav className="learn-hero__index" aria-label="Contenido de la página">
-            {learnVideos.map((video) => (
+          <nav className="learn-hero__index" aria-label={isSpanish ? 'Contenido de la pagina' : 'Page contents'}>
+            {videos.map((video) => (
               <a key={video.id} href={`#${video.id}`}>
                 <span>{video.index}</span>
                 <strong>{video.duration}</strong>
@@ -92,11 +105,11 @@ function LearnDixiePage() {
           </nav>
         </section>
 
-        <section className="learn-videos learn-container" aria-label="Videos sobre Dixie Cards">
-          {learnVideos.map((video) => (
+        <section className="learn-videos learn-container" aria-label={isSpanish ? 'Videos sobre Dixie Cards' : 'Videos about Dixie Cards'}>
+          {videos.map((video) => (
             <article className="learn-video" id={video.id} key={video.id}>
               <div className="learn-video__stage">
-                <VideoStage video={video} />
+                <VideoStage video={video} isSpanish={isSpanish} />
               </div>
               <div className="learn-video__copy">
                 <span className="learn-video__number">{video.index}</span>
@@ -116,11 +129,11 @@ function LearnDixiePage() {
         </section>
 
         <section className="learn-next-step learn-container">
-          <span className="learn-kicker">CUANDO ESTÉS LISTO</span>
-          <h2>Ahora hacelo tuyo.</h2>
-          <p>Volvé a la landing y empezá a construir tu portfolio.</p>
+          <span className="learn-kicker">{isSpanish ? 'CUANDO ESTES LISTO' : 'WHEN YOU ARE READY'}</span>
+          <h2>{isSpanish ? 'Ahora hacelo tuyo.' : 'Now make it yours.'}</h2>
+          <p>{isSpanish ? 'Volve a la landing y empeza a construir tu portfolio.' : 'Return to the landing page and start building your portfolio.'}</p>
           <Link className="learn-primary-link" to="/">
-            Ir a Dixie Cards <ArrowUpRightIcon />
+            {isSpanish ? 'Ir a Dixie Cards' : 'Go to Dixie Cards'} <ArrowUpRightIcon />
           </Link>
         </section>
 
